@@ -1,0 +1,622 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PowerMax Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+}
+
+/* ===== BODY ===== */
+body{
+  background:linear-gradient(180deg,#020617,#0b1224,#020617);
+  color:#f8fafc;
+}
+
+/* ===== CONTAINER ===== */
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:20px 14px 40px;
+}
+
+/* ===== TITLE ===== */
+.dash-title{
+  text-align:center;
+  font-size:24px;
+  font-weight:800;
+  color:#38bdf8;
+  margin-bottom:16px;
+}
+
+/* ===== USER CARD ===== */
+.user-card{
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:18px;
+  padding:16px;
+  text-align:center;
+  margin-bottom:18px;
+}
+
+.user-card p{
+  margin:6px 0;
+  font-size:14px;
+  color:#e5e7eb;
+}
+
+/* ===== PLANT CARD ===== */
+.plant{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px;
+  border-radius:16px;
+  margin-bottom:12px;
+}
+
+.plant h3{
+  font-size:16px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.plant p{
+  font-size:13px;
+  opacity:0.9;
+}
+
+/* ===== ACTIVATE BUTTON ===== */
+.activate{
+  background:rgba(255,255,255,0.25);
+  border:none;
+  padding:8px 16px;
+  border-radius:20px;
+  font-size:13px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* ===== PLANT COLORS ===== */
+.green{background:linear-gradient(135deg,#16a34a,#22c55e);}
+.yellow{background:linear-gradient(135deg,#ca8a04,#facc15);}
+.purple{background:linear-gradient(135deg,#7c3aed,#a855f7);}
+.blue{background:linear-gradient(135deg,#0284c7,#38bdf8);}
+.lavender{background:linear-gradient(135deg,#6d28d9,#c084fc);}
+.pink{background:linear-gradient(135deg,#be185d,#f472b6);}
+.mint{background:linear-gradient(135deg,#0f766e,#2dd4bf);}
+.gray{background:linear-gradient(135deg,#334155,#64748b);}
+
+/* ===== BUTTON ROW ===== */
+.btn-row{
+  display:flex;
+  gap:12px;
+  margin-top:14px;
+}
+
+/* ===== BUTTON ===== */
+.btn{
+  flex:1;
+  padding:14px;
+  border-radius:16px;
+  border:none;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* ===== BUTTON COLORS ===== */
+.purple-btn{background:#a855f7;color:#fff;}
+.teal-btn{background:#2dd4bf;color:#020617;}
+.orange-btn{background:#fb923c;color:#020617;}
+.green-btn{background:#22c55e;color:#020617;}
+.red-btn{background:#f43f5e;color:#fff;}
+
+/* ===== FULL ===== */
+.full{
+  width:100%;
+  margin-top:12px;
+}
+/* ===== REFERRAL MODAL ===== */
+.ref-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+
+.ref-box{
+  background:#ffffff;
+  width:92%;
+  max-width:380px;
+  border-radius:18px;
+  padding:20px;
+  color:#020617;
+}
+
+.ref-title{
+  font-size:18px;
+  font-weight:800;
+  color:#2563eb;
+}
+
+.ref-sub{
+  font-size:13px;
+  margin:6px 0 12px;
+  color:#475569;
+}
+
+.ref-label{
+  font-size:13px;
+  font-weight:700;
+}
+
+.ref-link{
+  display:flex;
+  gap:8px;
+  margin:8px 0 14px;
+}
+
+.ref-link input{
+  flex:1;
+  padding:8px;
+  border-radius:10px;
+  border:1px solid #cbd5f5;
+}
+
+.copy-btn{
+  background:#22c55e;
+  border:none;
+  color:#fff;
+  padding:8px 14px;
+  border-radius:10px;
+  font-weight:700;
+}
+
+.level{
+  margin-top:12px;
+  font-size:14px;
+}
+
+.l1{color:#16a34a;}
+.l2{color:#dc2626;}
+
+.level-box{
+  background:#ecfdf5;
+  border-radius:12px;
+  padding:14px;
+  text-align:center;
+  font-size:13px;
+  margin-top:6px;
+}
+
+.close-ref{
+  margin-top:16px;
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:2px solid #64748b;
+  background:#fff;
+  font-weight:700;
+}
+/* ===== DEPOSIT MODAL ===== */
+.dep-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+.status-btn {
+  background: #2563eb; /* نیلا بٹن */
+  color: #fff;
+  border: none;
+  padding: 8px 16px; /* مناسب سائز */
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 12px; /* Deposit Chips کے اوپر جگہ */
+  display: inline-block;
+}
+.dep-box{
+  background:#ffffff;
+  width:92%;
+  max-width:380px;
+  border-radius:18px;
+  padding:20px;
+  color:#020617;
+}
+
+.dep-title{
+  font-size:18px;
+  font-weight:800;
+  color:#2563eb;
+  margin-bottom:10px;
+}
+
+.dep-field{
+  margin-bottom:12px;
+}
+
+.dep-field label{
+  font-size:13px;
+  font-weight:700;
+}
+
+.dep-field select,
+.dep-field input{
+  width:100%;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid #cbd5f5;
+  margin-top:6px;
+}
+
+.wallet-row{
+  display:flex;
+  gap:8px;
+}
+
+.wallet-row input{
+  flex:1;
+}
+
+.dep-actions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+}
+
+.confirm-btn{
+  flex:1;
+  background:linear-gradient(135deg,#ef4444,#f97316);
+  border:none;
+  color:#fff;
+  padding:12px;
+  border-radius:14px;
+  font-weight:800;
+}
+
+.cancel-btn{
+  flex:1;
+  background:#fff;
+  border:2px solid #64748b;
+  padding:12px;
+  border-radius:14px;
+  font-weight:800;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2 class="dash-title">⚡ PowerMax Dashboard ⚡</h2>
+
+<!-- USER INFO -->
+<div class="user-card">
+  <p><b>User ID:</b> PMX12345</p>
+  <p><b>Balance:</b> 0 PTS</p>
+  <p><b>Name:</b> John Doe</p>
+</div>
+
+<!-- PLANTS -->
+<div class="plant green">
+  <div>
+    <h3>50 PTS Plant</h3>
+    <p>Commission 90%</p>
+  </div>
+  <button class="activate">Activate</button>
+</div>
+
+<div class="plant yellow">
+  <div>
+    <h3>100 PTS Plant</h3>
+    <p>Commission 90%</p>
+  </div>
+  <button class="activate">Activate</button>
+</div>
+
+<div class="plant purple">
+  <div>
+    <h3>300 PTS Plant</h3>
+    <p>Commission 90%</p>
+  </div>
+  <button class="activate">Activate</button>
+</div>
+
+<div class="plant blue">
+  <div>
+    <h3>500 PTS Plant</h3>
+    <p>Commission 90%</p>
+  </div>
+  <button class="activate">Activate</button>
+</div>
+
+<div class="plant lavender">
+  <div>
+    <h3>1000 PTS Plant</h3>
+    <p>Commission 90%</p>
+  </div>
+  <button class="activate">Activate</button>
+</div>
+
+<div class="plant pink">
+  <div>
+    <h3>2000 PTS Plant</h3>
+    <p>Commission 90%</p>
+  </div>
+  <button class="activate">Activate</button>
+</div>
+
+<div class="plant mint">
+  <div>
+    <h3>3000 PTS Plant</h3>
+    <p>Commission 90%</p>
+  </div>
+  <button class="activate">Activate</button>
+</div>
+
+<div class="plant gray">
+  <div>
+    <h3>5000 PTS Plant</h3>
+    <p>Commission 90%</p>
+  </div>
+  <button class="activate">Activate</button>
+</div>
+
+<!-- ACTION BUTTONS -->
+<div class="btn-row">
+  <button class="btn purple-btn" id="openReferral">Refer & Earn</button>
+  <button class="btn teal-btn" id="openDeposit">Deposit</button>
+</div>
+
+<div class="btn-row">
+  <button class="btn orange-btn" id="openWithdraw">Withdraw</button>
+  <button class="btn teal-btn" id="openHistory">History</button>
+</div>
+
+<button class="btn green-btn full">WhatsApp Support</button>
+<button class="btn red-btn full">Logout</button>
+
+</div>
+<!-- ===== HISTORY POPUP ===== -->
+<div id="historyModal" class="dep-modal">
+  <div class="dep-box">
+<h3 class="dep-title">📜 Commission History</h3>
+    <button id="closeHistory" class="close-ref">Close</button>
+
+  </div>
+</div>
+<!-- ===== HISTORY POPUP ===== -->
+<div id="historyModal" class="dep-modal">
+  <div class="dep-box">
+
+    <h3 class="dep-title">📜 Transaction History</h3>
+
+    <!-- PENDING -->
+    <div class="level-box" style="margin-bottom:10px;">
+      <b>Status:</b> <span style="color:#ca8a04;">Pending</span><br>
+      <b>Type:</b> Deposit<br>
+      <b>Amount:</b> 300 PTS<br>
+      <b>Time:</b> 2026-01-11 03:45 PM
+    </div>
+
+    <!-- APPROVED -->
+    <div class="level-box" style="margin-bottom:10px;">
+      <b>Status:</b> <span style="color:#16a34a;">Approved</span><br>
+      <b>Type:</b> Withdraw<br>
+      <b>Amount:</b> 500 PTS<br>
+      <b>Time:</b> 2026-01-10 06:20 PM
+    </div>
+
+    <!-- CANCELED -->
+    <div class="level-box">
+      <b>Status:</b> <span style="color:#dc2626;">Canceled</span><br>
+      <b>Type:</b> Withdraw<br>
+      <b>Amount:</b> 200 PTS<br>
+      <b>Time:</b> 2026-01-09 01:10 PM
+    </div>
+
+    <button id="closeHistory" class="cancel-btn" style="margin-top:14px;">
+      Close
+    </button>
+
+  </div>
+</div>
+<!-- ===== REFERRAL POPUP ===== -->
+<div id="referralModal" class="ref-modal">
+  <div class="ref-box">
+
+    <h3 class="ref-title">👥 Referral Team & Commission</h3>
+    <p class="ref-sub">Share this link to grow your team.</p>
+
+    <label class="ref-label">Your Referral Link</label>
+    <div class="ref-link">
+      <input type="text" value="https://my-dears-66cad.web.app/?ref=PD1jp" readonly>
+      <button class="copy-btn" id="copyReferral">Copy</button>
+    </div>
+
+    <button id="closeReferral" class="close-ref">Close</button>
+
+  </div>
+</div>
+<!-- ===== DEPOSIT POPUP ===== -->
+<div id="depositModal" class="dep-modal">
+  <div class="dep-box">
+    <button class="status-btn">Status</button>
+    <h3 class="dep-title">💰 Deposit Chips</h3>
+
+    <div class="dep-field">
+      <label>Amount (PTS)</label>
+      <select>
+        <option>50 PTS</option>
+        <option>100 PTS</option>
+        <option>300 PTS</option>
+        <option>500 PTS</option>
+        <option>1000 PTS</option>
+        <option>2000 PTS</option>
+        <option>3000 PTS</option>
+        <option>5000 PTS</option>
+      </select>
+    </div>
+
+    <div class="dep-field">
+      <label>Wallet (Send To)</label>
+      <select id="walletSelect">
+        <option value="jazz">JazzCash</option>
+        <option value="easy">Easypaisa</option>
+      </select>
+    </div>
+
+    <div class="dep-field">
+      <label>Wallet Number (Send To)</label>
+      <div class="wallet-row">
+        <input id="walletNumber" type="text" value="03090447488" readonly>
+        <button class="copy-btn" onclick="copyDepositNumber()">Copy</button>
+      </div>
+    </div>
+
+    <div class="dep-field">
+      <label>Wallet Owner Name (Sent From)</label>
+      <input type="text" placeholder="Enter wallet owner name">
+    </div>
+
+    <div class="dep-field">
+      <label>Your Wallet Number (Sent From)</label>
+      <input type="text" placeholder="Enter your wallet number">
+    </div>
+
+    <div class="dep-actions">
+      <button class="confirm-btn">Confirm Request</button>
+      <button id="closeDeposit" class="cancel-btn">Cancel</button>
+    </div>
+
+  </div>
+</div>
+<!-- ===== WITHDRAW POPUP ===== -->
+<div id="withdrawModal" class="dep-modal">
+  <div class="dep-box">
+<button class="status-btn">Status</button>
+    <h3 class="dep-title">💸 Withdraw Funds</h3>
+
+    <p style="color:red;font-size:13px;font-weight:700;margin-bottom:10px;">
+      Minimum withdrawal: 10 pts
+    </p>
+
+    <div class="dep-field">
+      <label>Amount (Min 10 pts)</label>
+      <input type="number" placeholder="Enter amount">
+    </div>
+
+    <div class="dep-field">
+      <label>Withdraw Method</label>
+      <select>
+        <option>JazzCash</option>
+        <option>EasyPaisa</option>
+      </select>
+    </div>
+
+    <div class="dep-field">
+      <label>Wallet Owner Name</label>
+      <input type="text" placeholder="Enter your registered name">
+    </div>
+
+    <div class="dep-field">
+      <label>Account Number (JazzCash / EasyPaisa)</label>
+      <input type="text" placeholder="Enter 11 digit account number">
+    </div>
+
+    <div class="dep-actions">
+      <button class="confirm-btn">Request Withdraw</button>
+      <button id="closeWithdraw" class="cancel-btn">Cancel</button>
+    </div>
+
+  </div>
+</div>
+<script>
+document.getElementById("openReferral").onclick = function () {
+  document.getElementById("referralModal").style.display = "flex";
+};
+
+document.getElementById("closeReferral").onclick = function () {
+  document.getElementById("referralModal").style.display = "none";
+};
+/* ===== COPY REFERRAL LINK (FIXED) ===== */
+document.getElementById("copyReferral").onclick = function () {
+  const btn = this;
+  const input = document.querySelector(".ref-link input");
+
+  navigator.clipboard.writeText(input.value).then(() => {
+    btn.innerText = "Copied ✓";
+
+    setTimeout(() => {
+      btn.innerText = "Copy";
+    }, 1000);
+  });
+};
+</script>
+
+<script>
+/* OPEN DEPOSIT */
+document.getElementById("openDeposit").onclick = function () {
+  document.getElementById("depositModal").style.display = "flex";
+};
+
+/* CLOSE DEPOSIT */
+document.getElementById("closeDeposit").onclick = function () {
+  document.getElementById("depositModal").style.display = "none";
+};
+
+/* AUTO CHANGE NUMBER */
+document.getElementById("walletSelect").onchange = function () {
+  const num = document.getElementById("walletNumber");
+  if(this.value === "jazz"){
+    num.value = "03090447488";
+  }else{
+    num.value = "03008775258";
+  }
+};
+
+/* COPY NUMBER (REPEATABLE) */
+function copyDepositNumber(){
+  const input = document.getElementById("walletNumber");
+  input.select();
+  input.setSelectionRange(0,99999);
+  navigator.clipboard.writeText(input.value);
+}
+/* OPEN HISTORY */
+document.getElementById("openHistory").onclick = function () {
+  document.getElementById("historyModal").style.display = "flex";
+};
+
+/* CLOSE HISTORY */
+document.getElementById("closeHistory").onclick = function () {
+  document.getElementById("historyModal").style.display = "none";
+};
+/* OPEN WITHDRAW */
+document.querySelector(".orange-btn").onclick = function () {
+  document.getElementById("withdrawModal").style.display = "flex";
+};
+
+/* CLOSE WITHDRAW */
+document.getElementById("closeWithdraw").onclick = function () {
+  document.getElementById("withdrawModal").style.display = "none";
+};
+</script>
+
+</body>
+</html>
