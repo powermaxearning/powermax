@@ -308,9 +308,9 @@ body{
 
 <!-- USER INFO -->
 <div class="user-card">
-  <p><b>User ID:</b> PMX12345</p>
-  <p><b>Balance:</b> 0 PTS</p>
-  <p><b>Name:</b> John Doe</p>
+  <p><b>User ID:</b> <span id="uID">...</span></p>
+  <p><b>Balance:</b> <span id="uBalance">...</span></p>
+  <p><b>Name:</b> <span id="uName">...</span></p>
 </div>
 
 <!-- PLANTS -->
@@ -398,42 +398,6 @@ body{
   <div class="dep-box">
 <h3 class="dep-title">📜 Commission History</h3>
     <button id="closeHistory" class="close-ref">Close</button>
-
-  </div>
-</div>
-<!-- ===== HISTORY POPUP ===== -->
-<div id="historyModal" class="dep-modal">
-  <div class="dep-box">
-
-    <h3 class="dep-title">📜 Transaction History</h3>
-
-    <!-- PENDING -->
-    <div class="level-box" style="margin-bottom:10px;">
-      <b>Status:</b> <span style="color:#ca8a04;">Pending</span><br>
-      <b>Type:</b> Deposit<br>
-      <b>Amount:</b> 300 PTS<br>
-      <b>Time:</b> 2026-01-11 03:45 PM
-    </div>
-
-    <!-- APPROVED -->
-    <div class="level-box" style="margin-bottom:10px;">
-      <b>Status:</b> <span style="color:#16a34a;">Approved</span><br>
-      <b>Type:</b> Withdraw<br>
-      <b>Amount:</b> 500 PTS<br>
-      <b>Time:</b> 2026-01-10 06:20 PM
-    </div>
-
-    <!-- CANCELED -->
-    <div class="level-box">
-      <b>Status:</b> <span style="color:#dc2626;">Canceled</span><br>
-      <b>Type:</b> Withdraw<br>
-      <b>Amount:</b> 200 PTS<br>
-      <b>Time:</b> 2026-01-09 01:10 PM
-    </div>
-
-    <button id="closeHistory" class="cancel-btn" style="margin-top:14px;">
-      Close
-    </button>
 
   </div>
 </div>
@@ -617,6 +581,43 @@ document.getElementById("closeWithdraw").onclick = function () {
   document.getElementById("withdrawModal").style.display = "none";
 };
 </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
+    authDomain: "powermax-3ea77.firebaseapp.com",
+    projectId: "powermax-3ea77",
+    storageBucket: "powermax-3ea77.firebasestorage.app",
+    messagingSenderId: "382941878878",
+    appId: "1:382941878878:web:4472ab183d1534077732cf"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      // login نہ ہو تو واپس index.html
+      window.location.href = "index.html";
+      return;
+    }
+
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+
+    if (snap.exists()) {
+      const data = snap.data();
+
+      document.getElementById("uName").innerText = data.name;
+      document.getElementById("uBalance").innerText = data.balance + " PTS";
+      document.getElementById("uID").innerText = data.uid;
+    }
+  });
+</script>
 
 </body>
-</html>
+       </html>
