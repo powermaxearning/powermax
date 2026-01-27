@@ -187,6 +187,9 @@ footer{
   const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
   const db = getFirestore(app);
+  // 🔗 GET REFERRAL UID FROM URL
+const urlParams = new URLSearchParams(window.location.search);
+const referredBy = urlParams.get("ref"); // null یا UID
 
   document.querySelector(".google").onclick = async () => {
     try {
@@ -198,12 +201,13 @@ footer{
 
       if (!userSnap.exists()) {
         await setDoc(userRef, {
-          uid: user.uid,
-          name: user.displayName,
-          email: user.email,
-          balance: 0,
-          createdAt: serverTimestamp()
-        });
+  uid: user.uid,
+  name: user.displayName,
+  email: user.email,
+  balance: 0,
+  referredBy: referredBy || null, // ⭐⭐⭐ یہی اصل referral field ہے
+  createdAt: serverTimestamp()
+});
       }
 
       window.location.href = "dashboard.html";
