@@ -585,6 +585,8 @@ document.getElementById("closeWithdraw").onclick = function () {
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { updateDoc, serverTimestamp, Timestamp } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
@@ -619,18 +621,90 @@ document.getElementById("closeWithdraw").onclick = function () {
   });
 </script>
 <script>
-/* ===== PLANT ACTIVATE CLICK TEST ===== */
+const PLANT_DURATION_DAYS = 15;
 
-document.querySelectorAll(".activate").forEach(btn => {
-  btn.addEventListener("click", () => {
+function resetAllButtons() {
+  document.querySelectorAll(".activate").forEach(btn => {
+    btn.innerText = "Activate";
+    btn.disabled = false;
+    btn.style.background = "rgba(255,255,255,0.25)";
+  });
+}
 
-    const amount = btn.getAttribute("data-amount");
+function markButtonActive(btn) {
+  btn.innerText = "Activated";
+  btn.disabled = true;
+  btn.style.background = "#22c55e";
+}
 
-    alert("Plant Clicked: " + amount + " PTS");
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return;
 
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+
+  // 🔁 Check expired plant
+  if (data.activePlant?.expiresAt) {
+    const now = Date.now();
+    const exp = data.activePlant.expiresAt.toMillis();
+
+    if (now > exp) {
+      await updateDoc(userRef, { activePlant: null });
+      resetAllButtons();
+    }
+  }
+
+  // ✅ If active plant exists
+  if (data.activePlant?.amount) {
+    const btn = document.querySelector(
+      `.activate[data-amount="${data.activePlant.amount}"]`
+    );
+    if (btn) markButtonActive(btn);
+  }
+
+  // 🔘 Activate click
+  document.querySelectorAll(".activate").forEach(btn => {
+    btn.onclick = async () => {
+
+      if (data.activePlant) {
+        alert("Your plant is already active.");
+        return;
+      }
+
+      const amount = Number(btn.dataset.amount);
+      if (data.balance < amount) {
+        alert("Insufficient balance.");
+        return;
+      }
+
+      const now = Timestamp.now();
+      const expires = Timestamp.fromMillis(
+        now.toMillis() + PLANT_DURATION_DAYS * 24 * 60 * 60 * 1000
+      );
+
+      await updateDoc(userRef, {
+        balance: data.balance - amount,
+        activePlant: {
+          amount,
+          activatedAt: now,
+          expiresAt: expires
+        }
+      });
+
+      data.balance -= amount;
+      data.activePlant = { amount, expiresAt: expires };
+
+      document.getElementById("uBalance").innerText = data.balance + " PTS";
+      markButtonActive(btn);
+
+      alert("Plant Activated Successfully!");
+    };
   });
 });
 </script>
 
 </body>
- </html>
+     </html>
