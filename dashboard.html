@@ -642,7 +642,9 @@ document.getElementById("closeWithdraw").onclick = function () {
     document.getElementById("uBalance").innerText = data.balance + " PTS";
     document.getElementById("uID").innerText = data.uid;
     // 🔗 SET REAL REFERRAL LINK
-const referralLink = `${window.location.origin}/?ref=${user.uid}`;
+const referralLink =
+  `${window.location.origin}/powermax/?ref=${user.uid}`;
+
 document.getElementById("refLinkInput").value = referralLink;
 
     // ⏱️ EXPIRE CHECK
@@ -737,4 +739,4 @@ await addDoc(collection(db, "commissions"), {
 </script>
 
 </body>
- </html>
+</html>
