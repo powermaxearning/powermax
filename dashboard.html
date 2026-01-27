@@ -319,7 +319,7 @@ body{
     <h3>50 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate">Activate</button>
+  <button class="activate" data-amount="50">Activate</button>
 </div>
 
 <div class="plant yellow">
@@ -327,7 +327,7 @@ body{
     <h3>100 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate">Activate</button>
+  <button class="activate" data-amount="100">Activate</button>
 </div>
 
 <div class="plant purple">
@@ -335,7 +335,7 @@ body{
     <h3>300 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate">Activate</button>
+  <button class="activate" data-amount="300">Activate</button>
 </div>
 
 <div class="plant blue">
@@ -343,7 +343,7 @@ body{
     <h3>500 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate">Activate</button>
+  <button class="activate" data-amount="500">Activate</button>
 </div>
 
 <div class="plant lavender">
@@ -351,7 +351,7 @@ body{
     <h3>1000 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate">Activate</button>
+  <button class="activate" data-amount="1000">Activate</button>
 </div>
 
 <div class="plant pink">
@@ -359,7 +359,7 @@ body{
     <h3>2000 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate">Activate</button>
+  <button class="activate" data-amount="2000">Activate</button>
 </div>
 
 <div class="plant mint">
@@ -367,7 +367,7 @@ body{
     <h3>3000 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate">Activate</button>
+  <button class="activate" data-amount="3000">Activate</button>
 </div>
 
 <div class="plant gray">
@@ -375,7 +375,7 @@ body{
     <h3>5000 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate">Activate</button>
+  <button class="activate" data-amount="5000">Activate</button>
 </div>
 
 <!-- ACTION BUTTONS -->
@@ -618,6 +618,19 @@ document.getElementById("closeWithdraw").onclick = function () {
     }
   });
 </script>
+<script>
+/* ===== PLANT ACTIVATE CLICK TEST ===== */
+
+document.querySelectorAll(".activate").forEach(btn => {
+  btn.addEventListener("click", () => {
+
+    const amount = btn.getAttribute("data-amount");
+
+    alert("Plant Clicked: " + amount + " PTS");
+
+  });
+});
+</script>
 
 </body>
-       </html>
+ </html>
