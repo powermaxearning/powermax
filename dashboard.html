@@ -685,6 +685,29 @@ document.getElementById("closeWithdraw").onclick = function () {
             expiresAt: expires
           }
         });
+        // ===== REFERRAL COMMISSION =====
+if (data.referredBy) {
+  const referrerRef = doc(db, "users", data.referredBy);
+  const refSnap = await getDoc(referrerRef);
+
+  if (refSnap.exists()) {
+    const refData = refSnap.data();
+
+    // check referrer plant active & not expired
+    if (
+      refData.activePlant &&
+      refData.activePlant.expiresAt &&
+      Date.now() < refData.activePlant.expiresAt.toMillis()
+    ) {
+      // commission = 10% of plant amount
+      const commission = amount * 0.10;
+
+      await updateDoc(referrerRef, {
+        balance: (refData.balance || 0) + commission
+      });
+    }
+  }
+}
 
         data.balance -= amount;
         data.activePlant = { amount, expiresAt: expires };
