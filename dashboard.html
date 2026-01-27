@@ -410,7 +410,7 @@ body{
 
     <label class="ref-label">Your Referral Link</label>
     <div class="ref-link">
-      <input type="text" value="https://my-dears-66cad.web.app/?ref=PD1jp" readonly>
+      <input type="text" id="refLinkInput" readonly>
       <button class="copy-btn" id="copyReferral">Copy</button>
     </div>
 
@@ -586,12 +586,15 @@ document.getElementById("closeWithdraw").onclick = function () {
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import {
-    getFirestore,
-    doc,
-    getDoc,
-    updateDoc,
-    Timestamp
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  Timestamp,
+  addDoc,
+  collection,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
@@ -638,6 +641,9 @@ document.getElementById("closeWithdraw").onclick = function () {
     document.getElementById("uName").innerText = data.name;
     document.getElementById("uBalance").innerText = data.balance + " PTS";
     document.getElementById("uID").innerText = data.uid;
+    // 🔗 SET REAL REFERRAL LINK
+const referralLink = `${window.location.origin}/?ref=${user.uid}`;
+document.getElementById("refLinkInput").value = referralLink;
 
     // ⏱️ EXPIRE CHECK
     if (data.activePlant?.expiresAt) {
@@ -685,7 +691,7 @@ document.getElementById("closeWithdraw").onclick = function () {
             expiresAt: expires
           }
         });
-        // ===== REFERRAL COMMISSION =====
+        // ===== REFERRAL COMMISSION (PER ACTIVATION - CONDITIONAL) =====
 if (data.referredBy) {
   const referrerRef = doc(db, "users", data.referredBy);
   const refSnap = await getDoc(referrerRef);
@@ -693,19 +699,28 @@ if (data.referredBy) {
   if (refSnap.exists()) {
     const refData = refSnap.data();
 
-    // check referrer plant active & not expired
+    // ✅ check: referrer plant must be active NOW
     if (
       refData.activePlant &&
       refData.activePlant.expiresAt &&
       Date.now() < refData.activePlant.expiresAt.toMillis()
     ) {
-      // commission = 10% of plant amount
-      const commission = amount * 0.10;
+      const commission = amount * 0.90;
 
-      await updateDoc(referrerRef, {
-        balance: (refData.balance || 0) + commission
-      });
+await updateDoc(referrerRef, {
+  balance: (refData.balance || 0) + commission
+});
+
+// ✅ COMMISSION HISTORY SAVE
+await addDoc(collection(db, "commissions"), {
+  fromUser: user.uid,          // B
+  toUser: data.referredBy,     // A
+  amount: commission,
+  plantAmount: amount,
+  createdAt: serverTimestamp()
+});
     }
+    // ❌ if referrer plant not active → no commission
   }
 }
 
