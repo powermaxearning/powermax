@@ -593,7 +593,7 @@ document.getElementById("closeWithdraw").onclick = function () {
   Timestamp,
   addDoc,
   collection,
-  serverTimestamp
+  serverTimestamp,
   query,
   where,
   getDocs
@@ -643,7 +643,7 @@ document.getElementById("closeWithdraw").onclick = function () {
     // 👤 USER INFO
     document.getElementById("uName").innerText = data.name;
     document.getElementById("uBalance").innerText = data.balance + " PTS";
-    document.getElementById("uID").innerText = data.uid;
+    document.getElementById("uID").innerText = user.uid;
     // 🔗 SET REAL REFERRAL LINK
 const referralLink =
   `${window.location.origin}/powermax/?ref=${user.uid}`;
@@ -758,4 +758,4 @@ await addDoc(collection(db, "commissions"), {
 </script>
 
 </body>
- </html>
+</html>
