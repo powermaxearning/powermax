@@ -651,15 +651,19 @@ const referralLink =
 document.getElementById("refLinkInput").value = referralLink;
 
     // ⏱️ EXPIRE CHECK
-    if (data.activePlant?.expiresAt) {
-      const now = Date.now();
-      const exp = data.activePlant.expiresAt.toMillis();
-      if (now > exp) {
-        await updateDoc(userRef, { activePlant: null });
-        resetAllButtons();
-        data.activePlant = null;
-      }
-    }
+if (data.activePlant?.expiresAt) {
+  const nowMs = Date.now();
+  const expMs = data.activePlant.expiresAt.toMillis();
+
+  if (nowMs > expMs) {
+    await updateDoc(userRef, {
+      activePlant: null
+    });
+
+    resetAllButtons();
+    data.activePlant = null;
+  }
+}
 
     // ✅ ACTIVE PLANT BUTTON
     if (data.activePlant?.amount) {
@@ -696,7 +700,7 @@ document.getElementById("refLinkInput").value = referralLink;
             expiresAt: expires
           }
         });
-        // ===== REFERRAL COMMISSION (PER ACTIVATION - CONDITIONAL) =====
+// ===== REFERRAL COMMISSION (SAFE & BUG-FREE) =====
 if (data.referredBy) {
   const referrerRef = doc(db, "users", data.referredBy);
   const refSnap = await getDoc(referrerRef);
@@ -704,58 +708,43 @@ if (data.referredBy) {
   if (refSnap.exists()) {
     const refData = refSnap.data();
 
-    // ✅ check: referrer plant must be active NOW
+    // ✅ referrer plant must be active
     if (
       refData.activePlant &&
       refData.activePlant.expiresAt &&
       Date.now() < refData.activePlant.expiresAt.toMillis()
     ) {
-      const commission = amount * 0.90;
+      const commission = amount * 0.9;
 
-await updateDoc(referrerRef, {
-  balance: (refData.balance || 0) + commission
-});
+      // 🔍 check if commission already exists
+      const q = await getDocs(
+        query(
+          collection(db, "commissions"),
+          where("fromUser", "==", user.uid),
+          where("toUser", "==", data.referredBy),
+          where("plantAmount", "==", amount)
+        )
+      );
 
-// 🔍 CHECK IF COMMISSION ALREADY GIVEN
-const commissionRef = collection(db, "commissions");
+      if (q.empty) {
+        // ✅ add commission balance
+        await updateDoc(referrerRef, {
+          balance: (refData.balance || 0) + commission
+        });
 
-const q = await getDocs(
-  query(
-    commissionRef,
-    where("fromUser", "==", user.uid),
-    where("plantAmount", "==", amount)
-  )
-);
-
-if (!q.empty) {
-  // commission already given, do nothing
-  return;
-}
-
-// ✅ SAVE COMMISSION HISTORY
-await addDoc(collection(db, "commissions"), {
-  fromUser: user.uid,          // B
-  toUser: data.referredBy,     // A
-  amount: commission,
-  plantAmount: amount,
-  createdAt: serverTimestamp()
-});
+        // ✅ save commission history
+        await addDoc(collection(db, "commissions"), {
+          fromUser: user.uid,
+          toUser: data.referredBy,
+          amount: commission,
+          plantAmount: amount,
+          createdAt: serverTimestamp()
+        });
+      }
     }
-    // ❌ if referrer plant not active → no commission
   }
 }
-
-        data.balance -= amount;
-        data.activePlant = { amount, expiresAt: expires };
-
-        document.getElementById("uBalance").innerText = data.balance + " PTS";
-        markButtonActive(btn);
-
-        alert("Plant Activated Successfully!");
-      };
-    });
-  });
 </script>
 
 </body>
-</html>
+  </html>
