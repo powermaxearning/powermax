@@ -595,6 +595,11 @@ document.getElementById("closeWithdraw").onclick = function () {
   collection,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
@@ -668,74 +673,87 @@ document.getElementById("refLinkInput").value = referralLink;
 
     // 🔘 ACTIVATE CLICK
     document.querySelectorAll(".activate").forEach(btn => {
-      btn.onclick = async () => {
-        if (data.activePlant) {
-          alert("Your plant is already active.");
-          return;
-        }
+  btn.onclick = async () => {
+    btn.disabled = true;
+    if (data.activePlant) {
+      alert("Your plant is already active.");
+      return;
+    }
 
-        const amount = Number(btn.dataset.amount);
-        if (data.balance < amount) {
-          alert("Insufficient balance.");
-          return;
-        }
+    const amount = Number(btn.dataset.amount);
+    if (data.balance < amount) {
+      alert("Insufficient balance.");
+      return;
+    }
 
-        const now = Timestamp.now();
-        const expires = Timestamp.fromMillis(
-          now.toMillis() + PLANT_DURATION_DAYS * 24 * 60 * 60 * 1000
-        );
+    const now = Timestamp.now();
+    const expires = Timestamp.fromMillis(
+      now.toMillis() + PLANT_DURATION_DAYS * 24 * 60 * 60 * 1000
+    );
 
-        await updateDoc(userRef, {
-          balance: data.balance - amount,
-          activePlant: {
-            amount,
-            activatedAt: now,
-            expiresAt: expires
-          }
-        });
-        // ===== REFERRAL COMMISSION (PER ACTIVATION - CONDITIONAL) =====
-if (data.referredBy) {
-  const referrerRef = doc(db, "users", data.referredBy);
+    await updateDoc(userRef, {
+      balance: data.balance - amount,
+      activePlant: {
+        amount,
+        activatedAt: now,
+        expiresAt: expires
+      }
+    });
+
+// ===== REFERRAL COMMISSION (SAFE) =====
+const freshSnap = await getDoc(userRef);
+const freshData = freshSnap.data();
+
+if (freshData.referredBy) {
+  const referrerRef = doc(db, "users", freshData.referredBy);
   const refSnap = await getDoc(referrerRef);
 
   if (refSnap.exists()) {
     const refData = refSnap.data();
 
-    // ✅ check: referrer plant must be active NOW
     if (
       refData.activePlant &&
       refData.activePlant.expiresAt &&
       Date.now() < refData.activePlant.expiresAt.toMillis()
     ) {
+
+      // 🔒 DUPLICATE COMMISSION CHECK
+      const commissionRef = collection(db, "commissions");
+      const q = await getDocs(
+  query(
+    commissionRef,
+    where("fromUser", "==", user.uid),
+    where("plantAmount", "==", amount)
+  )
+);
+if (!q.empty) return; // ⛔ already paid
+
+      // 💰 CALCULATE COMMISSION
       const commission = amount * 0.90;
 
-await updateDoc(referrerRef, {
-  balance: (refData.balance || 0) + commission
-});
+      await updateDoc(referrerRef, {
+        balance: (refData.balance || 0) + commission
+      });
 
-// ✅ COMMISSION HISTORY SAVE
-await addDoc(collection(db, "commissions"), {
-  fromUser: user.uid,          // B
-  toUser: data.referredBy,     // A
-  amount: commission,
-  plantAmount: amount,
-  createdAt: serverTimestamp()
-});
+      await addDoc(collection(db, "commissions"), {
+        fromUser: user.uid,
+        toUser: freshData.referredBy,
+        amount: commission,
+        plantAmount: amount,
+        createdAt: serverTimestamp()
+      });
     }
-    // ❌ if referrer plant not active → no commission
   }
 }
+    // UI update
+    data.balance -= amount;
+    data.activePlant = { amount, expiresAt: expires };
+    document.getElementById("uBalance").innerText = data.balance + " PTS";
+    markButtonActive(btn);
 
-        data.balance -= amount;
-        data.activePlant = { amount, expiresAt: expires };
-
-        document.getElementById("uBalance").innerText = data.balance + " PTS";
-        markButtonActive(btn);
-
-        alert("Plant Activated Successfully!");
-      };
-    });
-  });
+    alert("Plant Activated Successfully!");
+  };
+});
 </script>
 
 </body>
