@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -594,6 +594,9 @@ document.getElementById("closeWithdraw").onclick = function () {
   addDoc,
   collection,
   serverTimestamp
+  query,
+  where,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -713,7 +716,23 @@ await updateDoc(referrerRef, {
   balance: (refData.balance || 0) + commission
 });
 
-// ✅ COMMISSION HISTORY SAVE
+// 🔍 CHECK IF COMMISSION ALREADY GIVEN
+const commissionRef = collection(db, "commissions");
+
+const q = await getDocs(
+  query(
+    commissionRef,
+    where("fromUser", "==", user.uid),
+    where("plantAmount", "==", amount)
+  )
+);
+
+if (!q.empty) {
+  // commission already given, do nothing
+  return;
+}
+
+// ✅ SAVE COMMISSION HISTORY
 await addDoc(collection(db, "commissions"), {
   fromUser: user.uid,          // B
   toUser: data.referredBy,     // A
@@ -739,4 +758,4 @@ await addDoc(collection(db, "commissions"), {
 </script>
 
 </body>
-</html>
+ </html>
