@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -593,10 +593,7 @@ document.getElementById("closeWithdraw").onclick = function () {
   Timestamp,
   addDoc,
   collection,
-  serverTimestamp,
-  query,
-  where,
-  getDocs
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -643,7 +640,7 @@ document.getElementById("closeWithdraw").onclick = function () {
     // 👤 USER INFO
     document.getElementById("uName").innerText = data.name;
     document.getElementById("uBalance").innerText = data.balance + " PTS";
-    document.getElementById("uID").innerText = user.uid;
+    document.getElementById("uID").innerText = data.uid;
     // 🔗 SET REAL REFERRAL LINK
 const referralLink =
   `${window.location.origin}/powermax/?ref=${user.uid}`;
@@ -651,19 +648,15 @@ const referralLink =
 document.getElementById("refLinkInput").value = referralLink;
 
     // ⏱️ EXPIRE CHECK
-if (data.activePlant?.expiresAt) {
-  const nowMs = Date.now();
-  const expMs = data.activePlant.expiresAt.toMillis();
-
-  if (nowMs > expMs) {
-    await updateDoc(userRef, {
-      activePlant: null
-    });
-
-    resetAllButtons();
-    data.activePlant = null;
-  }
-}
+    if (data.activePlant?.expiresAt) {
+      const now = Date.now();
+      const exp = data.activePlant.expiresAt.toMillis();
+      if (now > exp) {
+        await updateDoc(userRef, { activePlant: null });
+        resetAllButtons();
+        data.activePlant = null;
+      }
+    }
 
     // ✅ ACTIVE PLANT BUTTON
     if (data.activePlant?.amount) {
@@ -700,52 +693,38 @@ if (data.activePlant?.expiresAt) {
             expiresAt: expires
           }
         });
-// ===== REFERRAL COMMISSION (SAFE & BUG-FREE) =====
+        // ===== REFERRAL COMMISSION (PER ACTIVATION - CONDITIONAL) =====
 if (data.referredBy) {
   const referrerRef = doc(db, "users", data.referredBy);
-  const refSnap = await getDoc(referrerRef);
 
-  if (refSnap.exists()) {
-    const refData = refSnap.data();
+  // 🔁 FRESH DATA
+  const freshRefSnap = await getDoc(referrerRef);
+  if (!freshRefSnap.exists()) return;
 
-    // ✅ referrer plant must be active
-    if (
-      refData.activePlant &&
-      refData.activePlant.expiresAt &&
-      Date.now() < refData.activePlant.expiresAt.toMillis()
-    ) {
-      const commission = amount * 0.9;
+  const freshRefData = freshRefSnap.data();
 
-      // 🔍 check if commission already exists
-      const q = await getDocs(
-        query(
-          collection(db, "commissions"),
-          where("fromUser", "==", user.uid),
-          where("toUser", "==", data.referredBy),
-          where("plantAmount", "==", amount)
-        )
-      );
+  // ✅ CHECK ACTIVE PLANT (REAL TIME)
+  if (
+    freshRefData.activePlant &&
+    freshRefData.activePlant.expiresAt &&
+    Date.now() < freshRefData.activePlant.expiresAt.toMillis()
+  ) {
+    const commission = amount * 0.90;
 
-      if (q.empty) {
-        // ✅ add commission balance
-        await updateDoc(referrerRef, {
-          balance: (refData.balance || 0) + commission
-        });
+    await updateDoc(referrerRef, {
+      balance: (freshRefData.balance || 0) + commission
+    });
 
-        // ✅ save commission history
-        await addDoc(collection(db, "commissions"), {
-          fromUser: user.uid,
-          toUser: data.referredBy,
-          amount: commission,
-          plantAmount: amount,
-          createdAt: serverTimestamp()
-        }
-    }
+    await addDoc(collection(db, "commissions"), {
+      fromUser: user.uid,        // B
+      toUser: data.referredBy,   // A
+      amount: commission,
+      plantAmount: amount,
+      createdAt: serverTimestamp()
+    });
   }
-}; // 👈 btn.onclick close
-});  // 👈 forEach close
-});  // 👈 onAuthStateChanged close
+}
 </script>
 
 </body>
-        </html>
+  </html>
