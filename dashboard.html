@@ -639,9 +639,14 @@ if (Date.now() > exp) return;
 
   const commission = plantAmount * 0.90;
 
+  try {
   await updateDoc(referrerRef, {
     balance: (refData.balance || 0) + commission
   });
+} catch (e) {
+  alert("Commission error: " + e.message);
+  console.error(e);
+}
 
   await addDoc(collection(db, "commissions"), {
     fromUser: buyerUid,
