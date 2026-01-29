@@ -736,18 +736,23 @@ document.getElementById("refLinkInput").value = referralLink;
         );
 
         await updateDoc(userRef, {
-          balance: data.balance - amount,
-          activePlant: {
-            amount,
-            activatedAt: now,
-            expiresAt: expires
-          }
-        });
-        await payReferralCommission({
+  balance: data.balance - amount,
+  activePlant: {
+    amount,
+    activatedAt: now,
+    expiresAt: expires
+  }
+});
+
+const freshSnap = await getDoc(userRef);
+const freshData = freshSnap.data();
+
+await payReferralCommission({
   buyerUid: user.uid,
-  referrerUid: data.referredBy,
+  referrerUid: freshData.referredBy,
   plantAmount: amount
 });
+
 data.balance -= amount;
 markButtonActive(btn);
 document.getElementById("uBalance").innerText = data.balance + " PTS";
@@ -757,4 +762,4 @@ document.getElementById("uBalance").innerText = data.balance + " PTS";
 </script>
 
 </body>
- </html>
+       </html>
