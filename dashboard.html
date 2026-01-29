@@ -626,12 +626,16 @@ async function payReferralCommission({
   const refData = refSnap.data();
 
   if (
-    !refData.activePlant ||
-    !refData.activePlant.expiresAt ||
-    Date.now() > refData.activePlant.expiresAt.toMillis()
-  ) {
-    return;
-  }
+  !refData.activePlant ||
+  !refData.activePlant.expiresAt
+) {
+  return;
+}
+  const exp = refData.activePlant.expiresAt?.toMillis
+  ? refData.activePlant.expiresAt.toMillis()
+  : refData.activePlant.expiresAt;
+
+if (Date.now() > exp) return;
 
   const commission = plantAmount * 0.90;
 
