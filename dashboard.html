@@ -610,6 +610,43 @@ document.getElementById("closeWithdraw").onclick = function () {
   const db = getFirestore(app);
 
   const PLANT_DURATION_DAYS = 15;
+  // ===== FIXED REFERRAL COMMISSION LOGIC =====
+async function payReferralCommission({
+  buyerUid,
+  referrerUid,
+  plantAmount
+}) {
+  if (!referrerUid) return;
+
+  const referrerRef = doc(db, "users", referrerUid);
+  const refSnap = await getDoc(referrerRef);
+
+  if (!refSnap.exists()) return;
+
+  const refData = refSnap.data();
+
+  if (
+    !refData.activePlant ||
+    !refData.activePlant.expiresAt ||
+    Date.now() > refData.activePlant.expiresAt.toMillis()
+  ) {
+    return;
+  }
+
+  const commission = plantAmount * 0.90;
+
+  await updateDoc(referrerRef, {
+    balance: (refData.balance || 0) + commission
+  });
+
+  await addDoc(collection(db, "commissions"), {
+    fromUser: buyerUid,
+    toUser: referrerUid,
+    amount: commission,
+    plantAmount: plantAmount,
+    createdAt: serverTimestamp()
+  });
+}
 
   function resetAllButtons() {
     document.querySelectorAll(".activate").forEach(btn => {
@@ -693,38 +730,18 @@ document.getElementById("refLinkInput").value = referralLink;
             expiresAt: expires
           }
         });
-        // ===== REFERRAL COMMISSION (PER ACTIVATION - CONDITIONAL) =====
-if (data.referredBy) {
-  const referrerRef = doc(db, "users", data.referredBy);
-
-  // 🔁 FRESH DATA
-  const freshRefSnap = await getDoc(referrerRef);
-  if (!freshRefSnap.exists()) return;
-
-  const freshRefData = freshRefSnap.data();
-
-  // ✅ CHECK ACTIVE PLANT (REAL TIME)
-  if (
-    freshRefData.activePlant &&
-    freshRefData.activePlant.expiresAt &&
-    Date.now() < freshRefData.activePlant.expiresAt.toMillis()
-  ) {
-    const commission = amount * 0.90;
-
-    await updateDoc(referrerRef, {
-      balance: (freshRefData.balance || 0) + commission
+        await payReferralCommission({
+  buyerUid: user.uid,
+  referrerUid: data.referredBy,
+  plantAmount: amount
+});
+data.balance -= amount;
+markButtonActive(btn);
+document.getElementById("uBalance").innerText = data.balance + " PTS";
+};
     });
-
-    await addDoc(collection(db, "commissions"), {
-      fromUser: user.uid,        // B
-      toUser: data.referredBy,   // A
-      amount: commission,
-      plantAmount: amount,
-      createdAt: serverTimestamp()
-    });
-  }
-}
+  });
 </script>
 
 </body>
-  </html>
+ </html>
