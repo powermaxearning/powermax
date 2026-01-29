@@ -610,51 +610,55 @@ document.getElementById("closeWithdraw").onclick = function () {
   const db = getFirestore(app);
 
   const PLANT_DURATION_DAYS = 15;
-  // ===== FIXED REFERRAL COMMISSION LOGIC =====
-async function payReferralCommission({
+  async function payReferralCommission({
   buyerUid,
   referrerUid,
   plantAmount
 }) {
-  if (!referrerUid) return;
+
+  alert("STEP 1: function called");
+
+  if (!referrerUid) {
+    alert("STOP: referrerUid missing");
+    return;
+  }
 
   const referrerRef = doc(db, "users", referrerUid);
   const refSnap = await getDoc(referrerRef);
 
-  if (!refSnap.exists()) return;
+  if (!refSnap.exists()) {
+    alert("STOP: referrer doc not found");
+    return;
+  }
 
   const refData = refSnap.data();
 
-  if (
-  !refData.activePlant ||
-  !refData.activePlant.expiresAt
-) {
-  return;
-}
-  const exp = refData.activePlant.expiresAt?.toMillis
-  ? refData.activePlant.expiresAt.toMillis()
-  : refData.activePlant.expiresAt;
+  if (!refData.activePlant) {
+    alert("STOP: referrer has NO activePlant");
+    return;
+  }
 
-if (Date.now() > exp) return;
+  if (!refData.activePlant.expiresAt) {
+    alert("STOP: expiresAt missing");
+    return;
+  }
+
+  const exp = refData.activePlant.expiresAt.toMillis();
+
+  if (Date.now() > exp) {
+    alert("STOP: referrer plant EXPIRED");
+    return;
+  }
+
+  alert("STEP 2: commission will be added");
 
   const commission = plantAmount * 0.90;
 
-  try {
   await updateDoc(referrerRef, {
     balance: (refData.balance || 0) + commission
   });
-} catch (e) {
-  alert("Commission error: " + e.message);
-  console.error(e);
-}
 
-  await addDoc(collection(db, "commissions"), {
-    fromUser: buyerUid,
-    toUser: referrerUid,
-    amount: commission,
-    plantAmount: plantAmount,
-    createdAt: serverTimestamp()
-  });
+  alert("STEP 3: commission added SUCCESS");
 }
 
   function resetAllButtons() {
