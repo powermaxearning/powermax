@@ -200,15 +200,27 @@ const referredBy = urlParams.get("ref"); // null یا UID
       const userSnap = await getDoc(userRef);
 
       if (!userSnap.exists()) {
-        await setDoc(userRef, {
-  uid: user.uid,
-  name: user.displayName,
-  email: user.email,
-  balance: 0,
-  referredBy: referredBy || null, // ⭐⭐⭐ یہی اصل referral field ہے
-  createdAt: serverTimestamp()
-});
-      }
+  // New user
+  await setDoc(userRef, {
+    uid: user.uid,
+    name: user.displayName,
+    email: user.email,
+    balance: 0,
+    referredBy: referredBy || null,
+    createdAt: serverTimestamp()
+  });
+} else {
+  // Existing user → referral missing ho sakta hai
+  const data = userSnap.data();
+
+  if (!data.referredBy && referredBy) {
+    await setDoc(
+      userRef,
+      { referredBy },
+      { merge: true }
+    );
+  }
+}
 
       window.location.href = "dashboard.html";
     } catch (error) {
