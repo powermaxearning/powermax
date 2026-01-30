@@ -748,9 +748,6 @@ document.getElementById("refLinkInput").value = referralLink;
 const freshSnap = await getDoc(userRef);
 const freshData = freshSnap.data();
 
-const freshSnap = await getDoc(userRef);
-const freshData = freshSnap.data();
-
 await payReferralCommission({
   buyerUid: user.uid,
   referrerUid: freshData.referredBy,
