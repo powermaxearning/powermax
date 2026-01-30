@@ -610,7 +610,7 @@ document.getElementById("closeWithdraw").onclick = function () {
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const PLANT_DURATION_DAYS = 15;
+  const PLANT_DURATION_DAYS = 30;
   async function payReferralCommission({
   buyerUid,
   referrerUid,
@@ -744,23 +744,9 @@ document.getElementById("refLinkInput").value = referralLink;
     expiresAt: expires
   }
 });
-
-const freshSnap = await getDoc(userRef);
-const freshData = freshSnap.data();
-
-await payReferralCommission({
-  buyerUid: user.uid,
-  referrerUid: freshData.referredBy,
-  plantAmount: amount
-});
-
-data.balance -= amount;
-markButtonActive(btn);
-document.getElementById("uBalance").innerText = data.balance + " PTS";
-};
-    });
-  });
+alert("Plant activated successfully");
+location.reload();
 </script>
 
 </body>
-   </html>
+</html>
