@@ -744,9 +744,13 @@ document.getElementById("refLinkInput").value = referralLink;
     expiresAt: expires
   }
 });
+// 🔁 Fresh buyer data (NO stale snapshot)
+const freshSnap = await getDoc(userRef);
+const freshData = freshSnap.data();
+
 await payReferralCommission({
   buyerUid: user.uid,
-  referrerUid: data.referredBy,
+  referrerUid: freshData.referredBy,
   plantAmount: amount
 });
 alert("Plant activated successfully");
@@ -757,4 +761,4 @@ location.reload();
 </script
 
 </body>
- </html>
+ </html>p
