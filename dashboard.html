@@ -690,7 +690,7 @@ document.getElementById("refInput").value = myRefLink;
             expiresAt: expires
           }
         });
-        // ===== REFERRAL COMMISSION + HISTORY =====
+        // ===== REFERRAL COMMISSION (TEST MODE - NO ACTIVE CHECK) =====
 if (data.referredBy) {
 
   const referrerRef = doc(db, "users", data.referredBy);
@@ -700,30 +700,23 @@ if (data.referredBy) {
 
     const refData = refSnap.data();
 
-    // check: referrer ka plant active ho
-    if (
-      refData.activePlant &&
-      refData.activePlant.expiresAt &&
-      Date.now() < refData.activePlant.expiresAt.toMillis()
-    ) {
+    // 🔥 Direct commission (no condition)
+    const commission = Math.floor(amount * 0.90);
 
-      const commission = Math.floor(amount * 0.90);
+    // add balance
+    await updateDoc(referrerRef, {
+      balance: (refData.balance || 0) + commission
+    });
 
-      // add balance
-      await updateDoc(referrerRef, {
-        balance: (refData.balance || 0) + commission
-      });
-
-      // save history
-      await addDoc(collection(db, "commissionHistory"), {
-        fromUser: user.uid,
-        toUser: data.referredBy,
-        amount: commission,
-        plantAmount: amount,
-        time: Timestamp.now()
-      });
-
-    }
+    // save history
+    await addDoc(collection(db, "commissionHistory"), {
+      fromUser: user.uid,
+      toUser: data.referredBy,
+      amount: commission,
+      plantAmount: amount,
+      mode: "TEST",
+      time: Timestamp.now()
+    });
 
   }
 }
@@ -741,4 +734,4 @@ if (data.referredBy) {
 </script>
 
 </body>
-     </html>
+       </html>
