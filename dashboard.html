@@ -744,6 +744,11 @@ document.getElementById("refLinkInput").value = referralLink;
     expiresAt: expires
   }
 });
+await payReferralCommission({
+  buyerUid: user.uid,
+  referrerUid: data.referredBy,
+  plantAmount: amount
+});
 alert("Plant activated successfully");
 location.reload();
 };
@@ -752,4 +757,4 @@ location.reload();
 </script
 
 </body>
-</html>
+ </html>
