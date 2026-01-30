@@ -308,9 +308,9 @@ body{
 
 <!-- USER INFO -->
 <div class="user-card">
-  <p><b>User ID:</b> <span id="uID">...</span></p>
-  <p><b>Balance:</b> <span id="uBalance">...</span></p>
-  <p><b>Name:</b> <span id="uName">...</span></p>
+  <p><b>User ID:</b> PMX12345</p>
+  <p><b>Balance:</b> 0 PTS</p>
+  <p><b>Name:</b> John Doe</p>
 </div>
 
 <!-- PLANTS -->
@@ -319,7 +319,7 @@ body{
     <h3>50 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate" data-amount="50">Activate</button>
+  <button class="activate">Activate</button>
 </div>
 
 <div class="plant yellow">
@@ -327,7 +327,7 @@ body{
     <h3>100 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate" data-amount="100">Activate</button>
+  <button class="activate">Activate</button>
 </div>
 
 <div class="plant purple">
@@ -335,7 +335,7 @@ body{
     <h3>300 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate" data-amount="300">Activate</button>
+  <button class="activate">Activate</button>
 </div>
 
 <div class="plant blue">
@@ -343,7 +343,7 @@ body{
     <h3>500 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate" data-amount="500">Activate</button>
+  <button class="activate">Activate</button>
 </div>
 
 <div class="plant lavender">
@@ -351,7 +351,7 @@ body{
     <h3>1000 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate" data-amount="1000">Activate</button>
+  <button class="activate">Activate</button>
 </div>
 
 <div class="plant pink">
@@ -359,7 +359,7 @@ body{
     <h3>2000 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate" data-amount="2000">Activate</button>
+  <button class="activate">Activate</button>
 </div>
 
 <div class="plant mint">
@@ -367,7 +367,7 @@ body{
     <h3>3000 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate" data-amount="3000">Activate</button>
+  <button class="activate">Activate</button>
 </div>
 
 <div class="plant gray">
@@ -375,7 +375,7 @@ body{
     <h3>5000 PTS Plant</h3>
     <p>Commission 90%</p>
   </div>
-  <button class="activate" data-amount="5000">Activate</button>
+  <button class="activate">Activate</button>
 </div>
 
 <!-- ACTION BUTTONS -->
@@ -401,6 +401,42 @@ body{
 
   </div>
 </div>
+<!-- ===== HISTORY POPUP ===== -->
+<div id="historyModal" class="dep-modal">
+  <div class="dep-box">
+
+    <h3 class="dep-title">📜 Transaction History</h3>
+
+    <!-- PENDING -->
+    <div class="level-box" style="margin-bottom:10px;">
+      <b>Status:</b> <span style="color:#ca8a04;">Pending</span><br>
+      <b>Type:</b> Deposit<br>
+      <b>Amount:</b> 300 PTS<br>
+      <b>Time:</b> 2026-01-11 03:45 PM
+    </div>
+
+    <!-- APPROVED -->
+    <div class="level-box" style="margin-bottom:10px;">
+      <b>Status:</b> <span style="color:#16a34a;">Approved</span><br>
+      <b>Type:</b> Withdraw<br>
+      <b>Amount:</b> 500 PTS<br>
+      <b>Time:</b> 2026-01-10 06:20 PM
+    </div>
+
+    <!-- CANCELED -->
+    <div class="level-box">
+      <b>Status:</b> <span style="color:#dc2626;">Canceled</span><br>
+      <b>Type:</b> Withdraw<br>
+      <b>Amount:</b> 200 PTS<br>
+      <b>Time:</b> 2026-01-09 01:10 PM
+    </div>
+
+    <button id="closeHistory" class="cancel-btn" style="margin-top:14px;">
+      Close
+    </button>
+
+  </div>
+</div>
 <!-- ===== REFERRAL POPUP ===== -->
 <div id="referralModal" class="ref-modal">
   <div class="ref-box">
@@ -410,7 +446,7 @@ body{
 
     <label class="ref-label">Your Referral Link</label>
     <div class="ref-link">
-      <input type="text" id="refLinkInput" readonly>
+      <input type="text" value="https://my-dears-66cad.web.app/?ref=PD1jp" readonly>
       <button class="copy-btn" id="copyReferral">Copy</button>
     </div>
 
@@ -582,183 +618,5 @@ document.getElementById("closeWithdraw").onclick = function () {
 };
 </script>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  Timestamp,
-  addDoc,
-  collection,
-  serverTimestamp,
-  increment
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
-    authDomain: "powermax-3ea77.firebaseapp.com",
-    projectId: "powermax-3ea77",
-    storageBucket: "powermax-3ea77.firebasestorage.app",
-    messagingSenderId: "382941878878",
-    appId: "1:382941878878:web:4472ab183d1534077732cf"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  const PLANT_DURATION_DAYS = 30;
-  async function payReferralCommission({
-  buyerUid,
-  referrerUid,
-  plantAmount
-}) {
-
-  alert("STEP 1: function called");
-
-  if (!referrerUid) {
-    alert("STOP: referrerUid missing");
-    return;
-  }
-
-  const referrerRef = doc(db, "users", referrerUid);
-  const refSnap = await getDoc(referrerRef);
-
-  if (!refSnap.exists()) {
-    alert("STOP: referrer doc not found");
-    return;
-  }
-
-  const refData = refSnap.data();
-
-  if (!refData.activePlant) {
-    alert("STOP: referrer has NO activePlant");
-    return;
-  }
-
-  if (!refData.activePlant.expiresAt) {
-    alert("STOP: expiresAt missing");
-    return;
-  }
-
-  const exp = refData.activePlant.expiresAt.toMillis();
-
-  if (Date.now() > exp) {
-    alert("STOP: referrer plant EXPIRED");
-    return;
-  }
-
-  alert("STEP 2: commission will be added");
-
-  const commission = plantAmount * 0.90;
-
-  await updateDoc(referrerRef, {
-  balance: increment(commission)
-});
-
-  alert("STEP 3: commission added SUCCESS");
-}
-
-  function resetAllButtons() {
-    document.querySelectorAll(".activate").forEach(btn => {
-      btn.innerText = "Activate";
-      btn.disabled = false;
-      btn.style.background = "rgba(255,255,255,0.25)";
-    });
-  }
-
-  function markButtonActive(btn) {
-    btn.innerText = "Activated";
-    btn.disabled = true;
-    btn.style.background = "#22c55e";
-  }
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "index.html";
-      return;
-    }
-
-    const userRef = doc(db, "users", user.uid);
-    const snap = await getDoc(userRef);
-    if (!snap.exists()) return;
-
-    const data = snap.data();
-
-    // 👤 USER INFO
-    document.getElementById("uName").innerText = data.name;
-    document.getElementById("uBalance").innerText = data.balance + " PTS";
-    document.getElementById("uID").innerText = data.uid;
-    // 🔗 SET REAL REFERRAL LINK
-const referralLink =
-  `${window.location.origin}/powermax/?ref=${user.uid}`;
-
-document.getElementById("refLinkInput").value = referralLink;
-
-    // ⏱️ EXPIRE CHECK
-    if (data.activePlant?.expiresAt) {
-      const now = Date.now();
-      const exp = data.activePlant.expiresAt.toMillis();
-      if (now > exp) {
-        await updateDoc(userRef, { activePlant: null });
-        resetAllButtons();
-        data.activePlant = null;
-      }
-    }
-
-    // ✅ ACTIVE PLANT BUTTON
-    if (data.activePlant?.amount) {
-      const btn = document.querySelector(
-        `.activate[data-amount="${data.activePlant.amount}"]`
-      );
-      if (btn) markButtonActive(btn);
-    }
-
-    // 🔘 ACTIVATE CLICK
-    document.querySelectorAll(".activate").forEach(btn => {
-      btn.onclick = async () => {
-        if (data.activePlant) {
-          alert("Your plant is already active.");
-          return;
-        }
-
-        const amount = Number(btn.dataset.amount);
-        if (data.balance < amount) {
-          alert("Insufficient balance.");
-          return;
-        }
-
-        const now = Timestamp.now();
-        const expires = Timestamp.fromMillis(
-          now.toMillis() + PLANT_DURATION_DAYS * 24 * 60 * 60 * 1000
-        );
-
-        await updateDoc(userRef, {
-  balance: data.balance - amount,
-  activePlant: {
-    amount,
-    activatedAt: now,
-    expiresAt: expires
-  }
-});
-// 🔁 Fresh buyer data (NO stale snapshot)
-const freshSnap = await getDoc(userRef);
-const freshData = freshSnap.data();
-
-await payReferralCommission({
-  buyerUid: user.uid,
-  referrerUid: freshData.referredBy,
-  plantAmount: amount
-});
-alert("Plant activated successfully");
-location.reload();
-};
-    });
-});
-</script
-
 </body>
- </html>p
+   </html>
