@@ -410,7 +410,7 @@ body{
 
     <label class="ref-label">Your Referral Link</label>
     <div class="ref-link">
-      <input type="text" value="https://my-dears-66cad.web.app/?ref=PD1jp" readonly>
+      <input type="text" id="refInput" readonly>
       <button class="copy-btn" id="copyReferral">Copy</button>
     </div>
 
@@ -586,11 +586,13 @@ document.getElementById("closeWithdraw").onclick = function () {
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import {
-    getFirestore,
-    doc,
-    getDoc,
-    updateDoc,
-    Timestamp
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  Timestamp,
+  addDoc,
+  collection
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -638,6 +640,9 @@ document.getElementById("closeWithdraw").onclick = function () {
     document.getElementById("uName").innerText = data.name;
     document.getElementById("uBalance").innerText = data.balance + " PTS";
     document.getElementById("uID").innerText = data.uid;
+    // 🔗 User ka apna referral link generate
+const myRefLink = `https://powermaxearning.github.io/powermax/?ref=${data.uid}`;
+document.getElementById("refInput").value = myRefLink;
 
     // ⏱️ EXPIRE CHECK
     if (data.activePlant?.expiresAt) {
@@ -685,27 +690,41 @@ document.getElementById("closeWithdraw").onclick = function () {
             expiresAt: expires
           }
         });
-        // ===== REFERRAL COMMISSION =====
+        // ===== REFERRAL COMMISSION + HISTORY =====
 if (data.referredBy) {
+
   const referrerRef = doc(db, "users", data.referredBy);
   const refSnap = await getDoc(referrerRef);
 
   if (refSnap.exists()) {
+
     const refData = refSnap.data();
 
-    // check referrer plant active & not expired
+    // check: referrer ka plant active ho
     if (
       refData.activePlant &&
       refData.activePlant.expiresAt &&
       Date.now() < refData.activePlant.expiresAt.toMillis()
     ) {
-      // commission = 10% of plant amount
-      const commission = amount * 0.90;
 
+      const commission = Math.floor(amount * 0.90);
+
+      // add balance
       await updateDoc(referrerRef, {
         balance: (refData.balance || 0) + commission
       });
+
+      // save history
+      await addDoc(collection(db, "commissionHistory"), {
+        fromUser: user.uid,
+        toUser: data.referredBy,
+        amount: commission,
+        plantAmount: amount,
+        time: Timestamp.now()
+      });
+
     }
+
   }
 }
 
@@ -722,4 +741,4 @@ if (data.referredBy) {
 </script>
 
 </body>
- </html>
+     </html>
