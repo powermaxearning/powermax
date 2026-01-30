@@ -205,7 +205,7 @@ const referredBy = urlParams.get("ref"); // null یا UID
   name: user.displayName,
   email: user.email,
   balance: 0,
-  referredBy: referredBy || null, // ⭐⭐⭐ یہی اصل referral field ہے
+  referredBy: referredBy,
   createdAt: serverTimestamp()
 });
       }
