@@ -1,164 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>PowerMax Admin Panel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body {
-  background: linear-gradient(180deg,#020617,#0b1224,#020617);
-  color: #f8fafc;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  padding: 20px;
-}
-h2 { text-align: center; color: #38bdf8; margin-bottom: 20px; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-th, td { padding: 10px; text-align: left; border-bottom: 1px solid #64748b; }
-th { background: #1e293b; }
-button { padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; margin-right: 6px; }
-.approve { background: #22c55e; color: #020617; }
-.reject { background: #ef4444; color: #fff; }
-.status { font-weight: 700; }
-</style>
-</head>
-<body>
-
-<h2>⚡ PowerMax Admin Panel ⚡</h2>
-
-<h3>Deposit Requests</h3>
-<table id="depositTable">
-  <thead>
-    <tr>
-      <th>User</th>
-      <th>Amount</th>
-      <th>Wallet</th>
-      <th>Wallet Number</th>
-      <th>Status</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<h3>Withdrawal Requests</h3>
-<table id="withdrawTable">
-  <thead>
-    <tr>
-      <th>User</th>
-      <th>Amount</th>
-      <th>Wallet</th>
-      <th>Wallet Number</th>
-      <th>Status</th>
-      <th>Action</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
-  authDomain: "powermax-3ea77.firebaseapp.com",
-  projectId: "powermax-3ea77",
-  storageBucket: "powermax-3ea77.firebasestorage.app",
-  messagingSenderId: "382941878878",
-  appId: "1:382941878878:web:4472ab183d1534077732cf"
+// ===== OPEN ADMIN PANEL =====
+document.getElementById("openAdminDeposit").onclick = async () => {
+  document.getElementById("adminDepositPanel").style.display = "flex";
+  loadDepositRequests(); // Load requests when admin opens panel
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// ===== CLOSE ADMIN PANEL =====
+document.getElementById("closeAdminDeposit").onclick = () => {
+  document.getElementById("adminDepositPanel").style.display = "none";
+};
 
-// ===== FETCH DEPOSIT REQUESTS =====
-async function loadDeposits() {
-  const depositTable = document.querySelector("#depositTable tbody");
-  depositTable.innerHTML = "";
-  const snapshot = await getDocs(collection(db, "deposits"));
-  snapshot.forEach(docSnap => {
+// ===== LOAD DEPOSIT REQUESTS =====
+async function loadDepositRequests(filter = "") {
+  const container = document.getElementById("depositRequestsContainer");
+  container.innerHTML = "Loading...";
+
+  const querySnapshot = await getDocs(collection(db, "deposits"));
+  container.innerHTML = "";
+
+  querySnapshot.forEach(docSnap => {
     const data = docSnap.data();
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${data.userName}</td>
-      <td>${data.amount}</td>
-      <td>${data.wallet}</td>
-      <td>${data.walletNumber}</td>
-      <td class="status">${data.status}</td>
-      <td>
-        <button class="approve">Approve</button>
-        <button class="reject">Reject</button>
-      </td>
+    const id = docSnap.id;
+
+    // Simple filter
+    if (
+      filter &&
+      !(
+        data.senderNumber.includes(filter) ||
+        data.uid.includes(filter) ||
+        (data.senderName && data.senderName.toLowerCase().includes(filter.toLowerCase()))
+      )
+    ) return;
+
+    const div = document.createElement("div");
+    div.style = "border:1px solid #cbd5f5; padding:12px; margin-bottom:8px; border-radius:12px;";
+
+    div.innerHTML = `
+      <p><b>User:</b> ${data.name} (UID: ${data.uid})</p>
+      <p><b>Amount:</b> ${data.amount}</p>
+      <p><b>Wallet:</b> ${data.walletType} - ${data.adminWallet}</p>
+      <p><b>Sender:</b> ${data.senderName} - ${data.senderNumber}</p>
+      <p><b>Status:</b> ${data.status}</p>
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        <button style="flex:1; background:#22c55e; color:#fff; padding:6px; border:none; border-radius:8px; cursor:pointer;" class="approve-btn">Approve</button>
+        <button style="flex:1; background:#ef4444; color:#fff; padding:6px; border:none; border-radius:8px; cursor:pointer;" class="reject-btn">Reject</button>
+      </div>
     `;
-    // APPROVE
-    tr.querySelector(".approve").onclick = async () => {
-      if (data.status !== "pending") return alert("Already processed");
-      await updateDoc(doc(db, "deposits", docSnap.id), { status: "approved" });
-      // Add balance to user
-      const userRef = doc(db, "users", data.userId);
+
+    container.appendChild(div);
+
+    // Approve Button
+    div.querySelector(".approve-btn").onclick = async () => {
+      const userRef = doc(db, "users", data.uid);
       const userSnap = await getDoc(userRef);
       if (userSnap.exists()) {
         const userData = userSnap.data();
-        await updateDoc(userRef, { balance: (userData.balance || 0) + data.amount });
+        await updateDoc(userRef, { balance: Number(userData.balance) + Number(data.amount) });
       }
-      loadDeposits();
+
+      await deleteDoc(doc(db, "deposits", id)); // Remove request from Firestore
+      loadDepositRequests(filter); // Refresh list
+      alert("Deposit Approved ✅");
     };
-    // REJECT
-    tr.querySelector(".reject").onclick = async () => {
-      if (data.status !== "pending") return alert("Already processed");
-      await updateDoc(doc(db, "deposits", docSnap.id), { status: "rejected" });
-      loadDeposits();
+
+    // Reject Button
+    div.querySelector(".reject-btn").onclick = async () => {
+      await deleteDoc(doc(db, "deposits", id));
+      loadDepositRequests(filter); // Refresh list
+      alert("Deposit Rejected ❌");
     };
-    depositTable.appendChild(tr);
   });
+
+  if (!container.innerHTML) {
+    container.innerHTML = "<p style='text-align:center;color:#888;'>No deposit requests found.</p>";
+  }
 }
 
-// ===== FETCH WITHDRAWAL REQUESTS =====
-async function loadWithdrawals() {
-  const withdrawTable = document.querySelector("#withdrawTable tbody");
-  withdrawTable.innerHTML = "";
-  const snapshot = await getDocs(collection(db, "withdrawals"));
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${data.userName}</td>
-      <td>${data.amount}</td>
-      <td>${data.wallet}</td>
-      <td>${data.walletNumber}</td>
-      <td class="status">${data.status}</td>
-      <td>
-        <button class="approve">Approve</button>
-        <button class="reject">Reject</button>
-      </td>
-    `;
-    // APPROVE
-    tr.querySelector(".approve").onclick = async () => {
-      if (data.status !== "pending") return alert("Already processed");
-      const userRef = doc(db, "users", data.userId);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        if ((userData.balance || 0) < data.amount) return alert("Insufficient balance");
-        await updateDoc(userRef, { balance: (userData.balance || 0) - data.amount });
-        await updateDoc(doc(db, "withdrawals", docSnap.id), { status: "approved" });
-      }
-      loadWithdrawals();
-    };
-    // REJECT
-    tr.querySelector(".reject").onclick = async () => {
-      if (data.status !== "pending") return alert("Already processed");
-      await updateDoc(doc(db, "withdrawals", docSnap.id), { status: "rejected" });
-      loadWithdrawals();
-    };
-    withdrawTable.appendChild(tr);
-  });
-}
-
-// Initial load
-loadDeposits();
-loadWithdrawals();
-</script>
-
-</body>
-</html>
+// ===== SEARCH DEPOSIT =====
+document.getElementById("searchDeposit").addEventListener("input", (e) => {
+  const value = e.target.value.trim();
+  loadDepositRequests(value);
+});
