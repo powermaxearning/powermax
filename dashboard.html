@@ -581,6 +581,13 @@ document.getElementById("closeWithdraw").onclick = function () {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  // ===== OPEN / CLOSE DEPOSIT MODAL =====
+const depositBtn = document.getElementById("openDeposit");
+const depositModal = document.getElementById("depositModal");
+const closeDepositBtn = document.getElementById("closeDeposit");
+
+depositBtn.onclick = () => depositModal.style.display = "flex";
+closeDepositBtn.onclick = () => depositModal.style.display = "none";
   // ===== REAL DEPOSIT REQUEST (Confirm Button) =====
 document.querySelector("#depositModal .confirm-btn").onclick = async function () {
   const user = auth.currentUser;
@@ -773,4 +780,4 @@ try {
 </script>
 
 </body>
- </html>
+</html>
