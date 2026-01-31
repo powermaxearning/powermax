@@ -691,35 +691,46 @@ document.getElementById("closeWithdraw").onclick = function () {
           }
         });
 
-// ===============================
-// COMMISSION SYSTEM (AUTO CREATE)
-// TEST MODE (NO CONDITIONS)
-// ===============================
+// ===== REFERRAL TRACK + COMMISSION SYSTEM =====
 
 try {
 
   if (data.referredBy) {
 
-    const commission = Math.floor(amount * 0.90);
+    const referrerRef = doc(db, "users", data.referredBy);
+    const refSnap = await getDoc(referrerRef);
 
-    await addDoc(collection(db, "commissions"), {
-      fromUser: data.uid,
-      toUser: data.referredBy,
-      amount: commission,
-      plantAmount: amount,
-      status: "test_pending",
-      rule: "no_condition",
-      createdAt: Timestamp.now()
-    });
+    if (refSnap.exists()) {
 
-    console.log("Commission Saved Successfully");
+      const refData = refSnap.data();
+      const commission = Math.floor(amount * 0.90);
+
+      // Update referral count & list
+      await updateDoc(referrerRef, {
+        refCount: (refData.refCount || 0) + 1,
+        referrals: [...(refData.referrals || []), data.uid]
+      });
+
+      // Save commission record
+      await addDoc(collection(db, "commissions"), {
+        fromUser: data.uid,
+        toUser: data.referredBy,
+        amount: commission,
+        plantAmount: amount,
+        createdAt: Timestamp.now(),
+        status: "pending"
+      });
+
+      console.log("Referral + Commission Saved");
+
+    }
 
   }
 
 } catch (err) {
 
-  console.error("Commission Error:", err);
-  alert("Commission Error: " + err.message);
+  console.error("Referral Error:", err);
+  alert("Referral Error: " + err.message);
 
 }
 
@@ -736,4 +747,4 @@ try {
 </script>
 
 </body>
- </html>
+</html>
