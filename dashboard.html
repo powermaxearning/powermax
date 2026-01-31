@@ -465,7 +465,7 @@ body{
     </div>
 
     <div class="dep-actions">
-      <button class="confirm-btn">Confirm Request</button>
+      <button class="confirm-btn" id="depositConfirmBtn">Confirm Request</button>
       <button id="closeDeposit" class="cancel-btn">Cancel</button>
     </div>
 
@@ -748,7 +748,7 @@ try {
   });
   // ===== DEPOSIT REAL SYSTEM =====
 
-const depositBtn = document.querySelector("#depositModal .confirm-btn");
+const depositBtn = document.getElementById("depositConfirmBtn");
 
 depositBtn.addEventListener("click", async () => {
 
