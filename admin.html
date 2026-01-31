@@ -2,50 +2,62 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel - PowerMax</title>
+<title>PowerMax Admin Panel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body { font-family: Arial, sans-serif; background: #0b1224; color: #fff; padding: 20px; }
-h2 { color: #38bdf8; text-align: center; margin-bottom: 20px; }
+body {
+  background: linear-gradient(180deg,#020617,#0b1224,#020617);
+  color: #f8fafc;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  padding: 20px;
+}
+h2 { text-align: center; color: #38bdf8; margin-bottom: 20px; }
 table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-th, td { padding: 10px; border: 1px solid #fff; text-align: left; }
-th { background: #2563eb; }
-button { padding: 6px 12px; margin: 2px; border: none; border-radius: 5px; cursor: pointer; }
+th, td { padding: 10px; text-align: left; border-bottom: 1px solid #64748b; }
+th { background: #1e293b; }
+button { padding: 6px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; margin-right: 6px; }
 .approve { background: #22c55e; color: #020617; }
 .reject { background: #ef4444; color: #fff; }
+.status { font-weight: 700; }
 </style>
 </head>
 <body>
 
-<h2>⚡ Admin Panel - PowerMax ⚡</h2>
+<h2>⚡ PowerMax Admin Panel ⚡</h2>
 
 <h3>Deposit Requests</h3>
 <table id="depositTable">
-  <tr>
-    <th>User ID</th>
-    <th>Amount (PTS)</th>
-    <th>Wallet</th>
-    <th>Wallet Number</th>
-    <th>Status</th>
-    <th>Action</th>
-  </tr>
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Amount</th>
+      <th>Wallet</th>
+      <th>Wallet Number</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
 </table>
 
-<h3>Withdraw Requests</h3>
+<h3>Withdrawal Requests</h3>
 <table id="withdrawTable">
-  <tr>
-    <th>User ID</th>
-    <th>Amount (PTS)</th>
-    <th>Wallet</th>
-    <th>Wallet Number</th>
-    <th>Status</th>
-    <th>Action</th>
-  </tr>
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Amount</th>
+      <th>Wallet</th>
+      <th>Wallet Number</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
 </table>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, getDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
@@ -59,87 +71,94 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// ===== Load Deposit Requests =====
+// ===== FETCH DEPOSIT REQUESTS =====
 async function loadDeposits() {
-  const depositTable = document.getElementById("depositTable");
-  const snapshot = await getDocs(collection(db, "depositRequests"));
+  const depositTable = document.querySelector("#depositTable tbody");
+  depositTable.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "deposits"));
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
-    const row = depositTable.insertRow();
-    row.innerHTML = `
-      <td>${data.userId}</td>
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${data.userName}</td>
       <td>${data.amount}</td>
       <td>${data.wallet}</td>
       <td>${data.walletNumber}</td>
-      <td>${data.status}</td>
+      <td class="status">${data.status}</td>
       <td>
-        <button class="approve" onclick="approveDeposit('${docSnap.id}', ${data.amount}, '${data.userId}')">Approve</button>
-        <button class="reject" onclick="rejectDeposit('${docSnap.id}')">Reject</button>
+        <button class="approve">Approve</button>
+        <button class="reject">Reject</button>
       </td>
     `;
+    // APPROVE
+    tr.querySelector(".approve").onclick = async () => {
+      if (data.status !== "pending") return alert("Already processed");
+      await updateDoc(doc(db, "deposits", docSnap.id), { status: "approved" });
+      // Add balance to user
+      const userRef = doc(db, "users", data.userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        await updateDoc(userRef, { balance: (userData.balance || 0) + data.amount });
+      }
+      loadDeposits();
+    };
+    // REJECT
+    tr.querySelector(".reject").onclick = async () => {
+      if (data.status !== "pending") return alert("Already processed");
+      await updateDoc(doc(db, "deposits", docSnap.id), { status: "rejected" });
+      loadDeposits();
+    };
+    depositTable.appendChild(tr);
   });
 }
 
-// ===== Approve / Reject Deposit =====
-async function approveDeposit(docId, amount, userId) {
-  const userRef = doc(db, "users", userId);
-  const userSnap = await getDocs(collection(db, "users"));
-  const userDoc = doc(db, "users", userId);
-  await updateDoc(userDoc, { balance: (userSnap.data()?.balance || 0) + amount });
-  await updateDoc(doc(db, "depositRequests", docId), { status: "Approved" });
-  alert("Deposit Approved");
-  location.reload();
-}
-
-async function rejectDeposit(docId) {
-  await updateDoc(doc(db, "depositRequests", docId), { status: "Rejected" });
-  alert("Deposit Rejected");
-  location.reload();
-}
-
-// ===== Load Withdraw Requests =====
-async function loadWithdraws() {
-  const withdrawTable = document.getElementById("withdrawTable");
-  const snapshot = await getDocs(collection(db, "withdrawRequests"));
+// ===== FETCH WITHDRAWAL REQUESTS =====
+async function loadWithdrawals() {
+  const withdrawTable = document.querySelector("#withdrawTable tbody");
+  withdrawTable.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "withdrawals"));
   snapshot.forEach(docSnap => {
     const data = docSnap.data();
-    const row = withdrawTable.insertRow();
-    row.innerHTML = `
-      <td>${data.userId}</td>
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${data.userName}</td>
       <td>${data.amount}</td>
       <td>${data.wallet}</td>
       <td>${data.walletNumber}</td>
-      <td>${data.status}</td>
+      <td class="status">${data.status}</td>
       <td>
-        <button class="approve" onclick="approveWithdraw('${docSnap.id}', ${data.amount}, '${data.userId}')">Approve</button>
-        <button class="reject" onclick="rejectWithdraw('${docSnap.id}')">Reject</button>
+        <button class="approve">Approve</button>
+        <button class="reject">Reject</button>
       </td>
     `;
+    // APPROVE
+    tr.querySelector(".approve").onclick = async () => {
+      if (data.status !== "pending") return alert("Already processed");
+      const userRef = doc(db, "users", data.userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        if ((userData.balance || 0) < data.amount) return alert("Insufficient balance");
+        await updateDoc(userRef, { balance: (userData.balance || 0) - data.amount });
+        await updateDoc(doc(db, "withdrawals", docSnap.id), { status: "approved" });
+      }
+      loadWithdrawals();
+    };
+    // REJECT
+    tr.querySelector(".reject").onclick = async () => {
+      if (data.status !== "pending") return alert("Already processed");
+      await updateDoc(doc(db, "withdrawals", docSnap.id), { status: "rejected" });
+      loadWithdrawals();
+    };
+    withdrawTable.appendChild(tr);
   });
 }
 
-// ===== Approve / Reject Withdraw =====
-async function approveWithdraw(docId, amount, userId) {
-  const userDoc = doc(db, "users", userId);
-  const userSnap = await getDocs(collection(db, "users"));
-  const userBalance = userSnap.data()?.balance || 0;
-  if (userBalance < amount) { alert("Insufficient Balance"); return; }
-  await updateDoc(userDoc, { balance: userBalance - amount });
-  await updateDoc(doc(db, "withdrawRequests", docId), { status: "Approved" });
-  alert("Withdraw Approved");
-  location.reload();
-}
-
-async function rejectWithdraw(docId) {
-  await updateDoc(doc(db, "withdrawRequests", docId), { status: "Rejected" });
-  alert("Withdraw Rejected");
-  location.reload();
-}
-
-// ===== Load all requests =====
+// Initial load
 loadDeposits();
-loadWithdraws();
-
+loadWithdrawals();
 </script>
+
 </body>
 </html>
