@@ -455,14 +455,14 @@ body{
     </div>
 
     <div class="dep-field">
-      <label>Wallet Owner Name (Sent From)</label>
-      <input type="text" placeholder="Enter wallet owner name">
-    </div>
+  <label>Wallet Owner Name (Sent From)</label>
+  <input type="text" id="senderName" placeholder="Enter wallet owner name">
+</div>
 
     <div class="dep-field">
-      <label>Your Wallet Number (Sent From)</label>
-      <input type="text" placeholder="Enter your wallet number">
-    </div>
+  <label>Your Wallet Number (Sent From)</label>
+  <input type="text" id="senderNumber" placeholder="Enter your wallet number">
+</div>
 
     <div class="dep-actions">
       <button class="confirm-btn" id="depositConfirmBtn">Confirm Request</button>
@@ -757,10 +757,10 @@ depositBtn.addEventListener("click", async () => {
   const adminWallet = document.getElementById("walletNumber").value;
 
   const senderName =
-    document.querySelectorAll("#depositModal input")[0].value.trim();
+document.getElementById("senderName").value.trim();
 
-  const senderNumber =
-    document.querySelectorAll("#depositModal input")[1].value.trim();
+const senderNumber =
+document.getElementById("senderNumber").value.trim();
 
   if (!senderName || !senderNumber) {
     alert("Please fill all fields");
@@ -796,8 +796,8 @@ depositBtn.addEventListener("click", async () => {
     alert("✅ Deposit Request Sent!");
 
     // Clear inputs
-    document.querySelectorAll("#depositModal input")[0].value = "";
-    document.querySelectorAll("#depositModal input")[1].value = "";
+    document.getElementById("senderName").value = "";
+document.getElementById("senderNumber").value = "";
 
     // Close modal
     document.getElementById("depositModal").style.display = "none";
@@ -830,4 +830,4 @@ document.querySelector(".red-btn").addEventListener("click", async () => {
 </script>
 
 </body>
- </html>
+   </html>
