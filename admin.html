@@ -93,75 +93,6 @@ body{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-async function loadDepositRequests(filter = "") {
-  const container = document.getElementById("depositRequestsContainer");
-  container.innerHTML = "Loading...";
-
-  const querySnapshot = await getDocs(collection(db, "deposits"));
-  container.innerHTML = "";
-  let found = false;
-
-  for(const docSnap of querySnapshot.docs){
-    const data = docSnap.data();
-    const id = docSnap.id;
-
-    if(
-      filter &&
-      !(
-        data.senderNumber.includes(filter) ||
-        data.uid.includes(filter) ||
-        (data.senderName && data.senderName.toLowerCase().includes(filter.toLowerCase()))
-      )
-    ) continue;
-
-    found = true;
-
-    const div = document.createElement("div");
-    div.className = "request-card";
-    div.innerHTML = `
-      <p><b>User:</b> ${data.name} (UID: ${data.uid})</p>
-      <p><b>Amount:</b> ${data.amount}</p>
-      <p><b>Wallet:</b> ${data.walletType} - ${data.adminWallet}</p>
-      <p><b>Sender:</b> ${data.senderName} - ${data.senderNumber}</p>
-      <p><b>Status:</b> ${data.status}</p>
-      <div class="request-actions">
-        <button class="approve-btn">Approve</button>
-        <button class="reject-btn">Reject</button>
-      </div>
-    `;
-
-    container.appendChild(div);
-
-    div.querySelector(".approve-btn").onclick = async () => {
-      const userRef = doc(db, "users", data.uid);
-      const userSnap = await getDoc(userRef);
-      if(userSnap.exists()){
-        const userData = userSnap.data();
-        await updateDoc(userRef, { balance: Number(userData.balance || 0) + Number(data.amount) });
-      }
-
-      await deleteDoc(doc(db, "deposits", id));
-      loadDepositRequests(filter);
-      alert("Deposit Approved ✅");
-    };
-
-    div.querySelector(".reject-btn").onclick = async () => {
-      await deleteDoc(doc(db, "deposits", id));
-      loadDepositRequests(filter);
-      alert("Deposit Rejected ❌");
-    };
-  }
-
-  if(!found) container.innerHTML = "<p style='text-align:center;color:#888;'>No deposit requests found.</p>";
-}
-
-// Search filter
-document.getElementById("searchDeposit").addEventListener("input", e => {
-  loadDepositRequests(e.target.value.trim());
-});
-
-// Initial load
-loadDepositRequests();
 import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -191,8 +122,8 @@ async function loadDepositRequests(filter = "") {
     if(
       filter &&
       !(
-        data.senderNumber.includes(filter) ||
-        data.uid.includes(filter) ||
+        (data.senderNumber && data.senderNumber.includes(filter)) ||
+        (data.uid && data.uid.includes(filter)) ||
         (data.senderName && data.senderName.toLowerCase().includes(filter.toLowerCase()))
       )
     ) continue;
@@ -215,21 +146,22 @@ async function loadDepositRequests(filter = "") {
 
     container.appendChild(div);
 
+    // ✅ Approve
     div.querySelector(".approve-btn").onclick = async () => {
-      // Get user ref and update balance
       const userRef = doc(db, "users", data.uid);
       const userSnap = await getDoc(userRef);
       if(userSnap.exists()){
         const userData = userSnap.data();
-        await updateDoc(userRef, { balance: Number(userData.balance || 0) + Number(data.amount) });
+        const amountNumber = Number(data.amount.replace(" PTS",""));
+        await updateDoc(userRef, { balance: Number(userData.balance || 0) + amountNumber });
       }
 
-      // Delete deposit request
       await deleteDoc(doc(db, "deposits", id));
       loadDepositRequests(filter);
       alert("Deposit Approved ✅");
     };
 
+    // ✅ Reject
     div.querySelector(".reject-btn").onclick = async () => {
       await deleteDoc(doc(db, "deposits", id));
       loadDepositRequests(filter);
