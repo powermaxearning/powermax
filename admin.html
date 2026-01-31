@@ -9,42 +9,32 @@
 *{
   margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
 }
-
-/* ===== BODY ===== */
 body{
   background: linear-gradient(180deg,#020617,#0b1224,#020617);
   color: #f8fafc;
 }
-
-/* ===== HEADER ===== */
 .header{
   text-align:center;
   font-size:28px;
   font-weight:800;
-  color:#ef4444; /* Red */
+  color:#ef4444; 
   margin:20px 0 10px;
 }
-
-/* ===== DEPOSIT TITLE ===== */
 .dep-title-main{
   text-align:center;
   font-size:22px;
   font-weight:700;
-  background: #22c55e; /* Green background */
+  background: #22c55e; 
   color:#fff;
   padding:12px;
   border-radius:12px;
   margin:10px 20px;
 }
-
-/* ===== ADMIN PANEL CONTAINER ===== */
 .admin-container{
   max-width:600px;
   margin:auto;
   padding:20px;
 }
-
-/* ===== SEARCH BAR ===== */
 #searchDeposit{
   width:100%;
   padding:10px;
@@ -53,8 +43,6 @@ body{
   margin-bottom:12px;
   font-size:14px;
 }
-
-/* ===== REQUEST CARD ===== */
 .request-card{
   border:1px solid #cbd5f5;
   background: rgba(255,255,255,0.05);
@@ -62,31 +50,27 @@ body{
   border-radius:12px;
   margin-bottom:10px;
 }
-
 .request-card p{
   margin:4px 0;
   font-size:14px;
 }
-
 .request-actions{
   display:flex;
   gap:10px;
   margin-top:6px;
 }
-
 .approve-btn{
   flex:1;
-  background:#22c55e; /* Green */
+  background:#22c55e; 
   color:#fff;
   padding:6px;
   border:none;
   border-radius:8px;
   cursor:pointer;
 }
-
 .reject-btn{
   flex:1;
-  background:#ef4444; /* Red */
+  background:#ef4444; 
   color:#fff;
   padding:6px;
   border:none;
@@ -98,19 +82,18 @@ body{
 <body>
 
 <div class="header">⚡ PowerMax Admin Panel ⚡</div>
-
 <div class="dep-title-main">💰 Deposit Requests</div>
 
 <div class="admin-container">
   <input type="text" id="searchDeposit" placeholder="Search by user number / UID / Name...">
   <div id="depositRequestsContainer">
-    <!-- Deposit Requests will appear here -->
+    Loading...
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
@@ -130,21 +113,20 @@ async function loadDepositRequests(filter = "") {
 
   const querySnapshot = await getDocs(collection(db, "deposits"));
   container.innerHTML = "";
-
   let found = false;
 
-  querySnapshot.forEach(docSnap => {
+  for(const docSnap of querySnapshot.docs){
     const data = docSnap.data();
     const id = docSnap.id;
 
-    if (
+    if(
       filter &&
       !(
         data.senderNumber.includes(filter) ||
         data.uid.includes(filter) ||
         (data.senderName && data.senderName.toLowerCase().includes(filter.toLowerCase()))
       )
-    ) return;
+    ) continue;
 
     found = true;
 
@@ -165,15 +147,15 @@ async function loadDepositRequests(filter = "") {
     container.appendChild(div);
 
     div.querySelector(".approve-btn").onclick = async () => {
-      // Update user balance
+      // Get user ref and update balance
       const userRef = doc(db, "users", data.uid);
-      const userSnap = await getDocs(collection(db, "users")); // Fetch user
-      try {
-        const userDoc = await importUserData(data.uid); // helper
-        await updateDoc(userRef, { balance: Number(userDoc.balance) + Number(data.amount) });
-      } catch(e){console.error(e);}
-      
-      // Remove deposit request
+      const userSnap = await getDoc(userRef);
+      if(userSnap.exists()){
+        const userData = userSnap.data();
+        await updateDoc(userRef, { balance: Number(userData.balance || 0) + Number(data.amount) });
+      }
+
+      // Delete deposit request
       await deleteDoc(doc(db, "deposits", id));
       loadDepositRequests(filter);
       alert("Deposit Approved ✅");
@@ -184,20 +166,9 @@ async function loadDepositRequests(filter = "") {
       loadDepositRequests(filter);
       alert("Deposit Rejected ❌");
     };
-  });
+  }
 
   if(!found) container.innerHTML = "<p style='text-align:center;color:#888;'>No deposit requests found.</p>";
-}
-
-// Optional helper to fetch a single user (for balance update)
-async function importUserData(uid){
-  const docRef = doc(db,"users",uid);
-  const docSnap = await getDocs(collection(db,"users"));
-  let userData = {};
-  docSnap.forEach(u=>{
-    if(u.id===uid) userData = u.data();
-  });
-  return userData;
 }
 
 // Search filter
@@ -205,7 +176,7 @@ document.getElementById("searchDeposit").addEventListener("input", e => {
   loadDepositRequests(e.target.value.trim());
 });
 
-// Load all requests initially
+// Initial load
 loadDepositRequests();
 
 </script>
