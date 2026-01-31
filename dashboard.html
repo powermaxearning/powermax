@@ -600,9 +600,71 @@ document.getElementById("closeWithdraw").onclick = function () {
 };
 /* OPEN STATUS */
 const statusBtn = document.getElementById("openStatus");
-if(statusBtn){   // ← یہ چیک ضروری ہے
-  statusBtn.onclick = function () {
-    document.getElementById("statusModal").style.display = "flex";
+if(statusBtn){
+  statusBtn.onclick = async function () {
+    const statusList = document.getElementById("statusList");
+    statusList.innerHTML = "Loading...";
+
+    const user = auth.currentUser;
+    if(!user) return alert("Login again");
+
+    try {
+      const depositsRef = collection(db, "deposits");
+      const q = query(
+        depositsRef,
+        where("uid", "==", user.uid),
+        orderBy("createdAt", "desc")
+      );
+      const snapshot = await getDocs(q);
+
+      if(snapshot.empty){
+        statusList.innerHTML = "<p>No deposits found.</p>";
+        document.getElementById("statusModal").style.display = "flex";
+        return;
+      }
+
+      let html = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const date = data.createdAt.toDate().toLocaleString(); // Local date/time
+        let statusColor = "";
+        let statusText = "";
+
+        switch(data.status){
+          case "pending":
+            statusColor = "orange";
+            statusText = "Pending";
+            break;
+          case "approved":
+            statusColor = "green";
+            statusText = "Approved";
+            break;
+          case "rejected":
+          case "cancel":
+            statusColor = "red";
+            statusText = "Rejected";
+            break;
+          default:
+            statusColor = "gray";
+            statusText = data.status;
+        }
+
+        html += `
+          <div style="padding:8px; border-bottom:1px solid #ccc;">
+            <strong>Amount:</strong> ${data.amount} PTS<br>
+            <strong>Status:</strong> <span style="color:${statusColor}; font-weight:700;">${statusText}</span><br>
+            <strong>Date:</strong> ${date}
+          </div>
+        `;
+      });
+
+      statusList.innerHTML = html;
+      document.getElementById("statusModal").style.display = "flex";
+
+    } catch (err) {
+      console.error(err);
+      alert("Error fetching status: " + err.message);
+    }
   };
 }
 
@@ -860,4 +922,4 @@ document.querySelector(".red-btn").addEventListener("click", async () => {
 </script>
 
 </body>
- </html>
+</html>
