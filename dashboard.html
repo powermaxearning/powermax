@@ -599,9 +599,12 @@ document.getElementById("closeWithdraw").onclick = function () {
   document.getElementById("withdrawModal").style.display = "none";
 };
 /* OPEN STATUS */
-document.getElementById("openStatus").onclick = function () {
-  document.getElementById("statusModal").style.display = "flex";
-};
+const statusBtn = document.getElementById("openStatus");
+if(statusBtn){   // ← یہ چیک ضروری ہے
+  statusBtn.onclick = function () {
+    document.getElementById("statusModal").style.display = "flex";
+  };
+}
 
 /* CLOSE STATUS */
 document.getElementById("closeStatus").onclick = function () {
