@@ -720,6 +720,9 @@ try {
         createdAt: Timestamp.now(),
         status: "pending"
       });
+     // ===== UPDATE REFERRER BALANCE =====
+const newBalance = (refData.balance || 0) + commission;
+await updateDoc(referrerRef, { balance: newBalance });
 
       console.log("Referral + Commission Saved");
 
