@@ -691,50 +691,49 @@ document.getElementById("closeWithdraw").onclick = function () {
           }
         });
 
-// ===== REFERRAL TRACK + COMMISSION SYSTEM =====
-
+// ===== REFERRAL TRACK + COMMISSION SYSTEM (WITH ACTIVE PLANT CHECK) =====
 try {
-
   if (data.referredBy) {
-
     const referrerRef = doc(db, "users", data.referredBy);
     const refSnap = await getDoc(referrerRef);
 
     if (refSnap.exists()) {
-
       const refData = refSnap.data();
-      const commission = Math.floor(amount * 0.90);
+      const now = Timestamp.now();
 
-      // Update referral count & list
-      await updateDoc(referrerRef, {
-        refCount: (refData.refCount || 0) + 1,
-        referrals: [...(refData.referrals || []), data.uid]
-      });
+      // ✅ Only give commission if referrer's plant is active
+      if (refData.activePlant && refData.activePlant.expiresAt.toMillis() > now.toMillis()) {
+        const commission = Math.floor(amount * 0.90);
 
-      // Save commission record
-      await addDoc(collection(db, "commissions"), {
-        fromUser: data.uid,
-        toUser: data.referredBy,
-        amount: commission,
-        plantAmount: amount,
-        createdAt: Timestamp.now(),
-        status: "pending"
-      });
-     // ===== UPDATE REFERRER BALANCE =====
-const newBalance = (refData.balance || 0) + commission;
-await updateDoc(referrerRef, { balance: newBalance });
+        // Update referral count & list
+        await updateDoc(referrerRef, {
+          refCount: (refData.refCount || 0) + 1,
+          referrals: [...(refData.referrals || []), data.uid]
+        });
 
-      console.log("Referral + Commission Saved");
+        // Save commission record
+        await addDoc(collection(db, "commissions"), {
+          fromUser: data.uid,
+          toUser: data.referredBy,
+          amount: commission,
+          plantAmount: amount,
+          createdAt: now,
+          status: "pending"
+        });
 
+        // Update referrer balance
+        const newBalance = (refData.balance || 0) + commission;
+        await updateDoc(referrerRef, { balance: newBalance });
+
+        console.log("Referral + Commission Saved");
+      } else {
+        console.log("Referrer's plant inactive – commission not added");
+      }
     }
-
   }
-
 } catch (err) {
-
   console.error("Referral Error:", err);
   alert("Referral Error: " + err.message);
-
 }
 
         // Update local data
