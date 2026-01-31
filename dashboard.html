@@ -535,57 +535,7 @@ document.getElementById("copyReferral").onclick = function () {
 </script>
 
 <script>
-/* ===== REAL DEPOSIT REQUEST (Confirm Button) ===== */
-document.querySelector("#depositModal .confirm-btn").onclick = async function () {
-  const user = auth.currentUser;
-  if (!user) return alert("User not logged in");
 
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
-  if (!snap.exists()) return alert("User data not found!");
-
-  const data = snap.data();
-
-  // Get deposit amount
-  const select = document.querySelector("#depositModal select");
-  const amountStr = select.value.replace(" PTS", "");
-  const amount = Number(amountStr);
-
-  // Wallet info
-  const walletSelect = document.getElementById("walletSelect");
-  const wallet = walletSelect.value;
-  const walletNumber = document.getElementById("walletNumber").value;
-  const senderName = document.querySelector("#depositModal input[placeholder='Enter wallet owner name']").value.trim();
-  const senderNumber = document.querySelector("#depositModal input[placeholder='Enter your wallet number']").value.trim();
-
-  if (!senderName || !senderNumber) {
-    return alert("Please fill all wallet details.");
-  }
-
-  // Save deposit request to Firestore
-  try {
-    // DepositRequests collection auto-create
-    await addDoc(collection(db, "depositRequests"), {
-      userId: user.uid,
-      userName: data.name,
-      amount: amount,
-      wallet,
-      walletNumber,
-      senderName,
-      senderNumber,
-      status: "pending",
-      createdAt: Timestamp.now()
-    });
-
-    // ✅ SUCCESS feedback
-    alert(`✅ Deposit request of ${amount} PTS sent successfully!`);
-    document.getElementById("depositModal").style.display = "none";
-
-  } catch(err) {
-    console.error("Deposit Error:", err);
-    alert("❌ Deposit request failed: " + err.message);
-  }
-};
 /* OPEN HISTORY */
 document.getElementById("openHistory").onclick = function () {
   document.getElementById("historyModal").style.display = "flex";
@@ -631,6 +581,56 @@ document.getElementById("closeWithdraw").onclick = function () {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+  // ===== REAL DEPOSIT REQUEST (Confirm Button) =====
+document.querySelector("#depositModal .confirm-btn").onclick = async function () {
+  const user = auth.currentUser;
+  if (!user) return alert("User not logged in");
+
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) return alert("User data not found!");
+
+  const data = snap.data();
+
+  // Get deposit amount
+  const select = document.querySelector("#depositModal select");
+  const amountStr = select.value.replace(" PTS", "");
+  const amount = Number(amountStr);
+
+  // Wallet info
+  const walletSelect = document.getElementById("walletSelect");
+  const wallet = walletSelect.value;
+  const walletNumber = document.getElementById("walletNumber").value;
+  const senderName = document.querySelector("#depositModal input[placeholder='Enter wallet owner name']").value.trim();
+  const senderNumber = document.querySelector("#depositModal input[placeholder='Enter your wallet number']").value.trim();
+
+  if (!senderName || !senderNumber) {
+    return alert("Please fill all wallet details.");
+  }
+
+  // Save deposit request to Firestore
+  try {
+    await addDoc(collection(db, "depositRequests"), {
+      userId: user.uid,
+      userName: data.name,
+      amount: amount,
+      wallet,
+      walletNumber,
+      senderName,
+      senderNumber,
+      status: "pending",
+      createdAt: Timestamp.now()
+    });
+
+    // ✅ SUCCESS feedback
+    alert(`✅ Deposit request of ${amount} PTS sent successfully!`);
+    document.getElementById("depositModal").style.display = "none";
+
+  } catch(err) {
+    console.error("Deposit Error:", err);
+    alert("❌ Deposit request failed: " + err.message);
+  }
+};
 
   const PLANT_DURATION_DAYS = 15;
 
