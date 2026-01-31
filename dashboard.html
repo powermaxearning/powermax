@@ -691,31 +691,37 @@ document.getElementById("closeWithdraw").onclick = function () {
           }
         });
 
-        // ===== REFERRAL COMMISSION (TEST MODE) =====
-        if (data.referredBy) {
-          const referrerRef = doc(db, "users", data.referredBy);
-          const refSnap = await getDoc(referrerRef);
+// ===============================
+// COMMISSION SYSTEM (AUTO CREATE)
+// TEST MODE (NO CONDITIONS)
+// ===============================
 
-          if (refSnap.exists()) {
-            const refData = refSnap.data();
-            const commission = Math.floor(amount * 0.90);
+try {
 
-            // Add commission safely
-            await updateDoc(referrerRef, {
-              balance: (Number(refData.balance) || 0) + commission
-            });
+  if (data.referredBy) {
 
-            // Save commission history
-            await addDoc(collection(db, "commissionHistory"), {
-              fromUser: data.uid,
-              toUser: data.referredBy,
-              amount: commission,
-              plantAmount: amount,
-              mode: "TEST",
-              time: Timestamp.now()
-            });
-          }
-        }
+    const commission = Math.floor(amount * 0.90);
+
+    await addDoc(collection(db, "commissions"), {
+      fromUser: data.uid,
+      toUser: data.referredBy,
+      amount: commission,
+      plantAmount: amount,
+      status: "test_pending",
+      rule: "no_condition",
+      createdAt: Timestamp.now()
+    });
+
+    console.log("Commission Saved Successfully");
+
+  }
+
+} catch (err) {
+
+  console.error("Commission Error:", err);
+  alert("Commission Error: " + err.message);
+
+}
 
         // Update local data
         data.balance = Number(data.balance) - amount;
