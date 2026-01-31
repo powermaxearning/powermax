@@ -535,34 +535,6 @@ document.getElementById("copyReferral").onclick = function () {
 </script>
 
 <script>
-/* OPEN DEPOSIT */
-document.getElementById("openDeposit").onclick = function () {
-  document.getElementById("depositModal").style.display = "flex";
-};
-
-/* CLOSE DEPOSIT */
-document.getElementById("closeDeposit").onclick = function () {
-  document.getElementById("depositModal").style.display = "none";
-};
-
-/* AUTO CHANGE NUMBER */
-document.getElementById("walletSelect").onchange = function () {
-  const num = document.getElementById("walletNumber");
-  if(this.value === "jazz"){
-    num.value = "03090447488";
-  }else{
-    num.value = "03008775258";
-  }
-};
-
-/* COPY NUMBER */
-function copyDepositNumber(){
-  const input = document.getElementById("walletNumber");
-  input.select();
-  input.setSelectionRange(0,99999);
-  navigator.clipboard.writeText(input.value);
-}
-
 /* ===== REAL DEPOSIT REQUEST (Confirm Button) ===== */
 document.querySelector("#depositModal .confirm-btn").onclick = async function () {
   const user = auth.currentUser;
@@ -592,6 +564,7 @@ document.querySelector("#depositModal .confirm-btn").onclick = async function ()
 
   // Save deposit request to Firestore
   try {
+    // DepositRequests collection auto-create
     await addDoc(collection(db, "depositRequests"), {
       userId: user.uid,
       userName: data.name,
