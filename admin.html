@@ -1,15 +1,129 @@
-// ===== OPEN ADMIN PANEL =====
-document.getElementById("openAdminDeposit").onclick = async () => {
-  document.getElementById("adminDepositPanel").style.display = "flex";
-  loadDepositRequests(); // Load requests when admin opens panel
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PowerMax Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{
+  margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+}
+
+/* ===== BODY ===== */
+body{
+  background: linear-gradient(180deg,#020617,#0b1224,#020617);
+  color: #f8fafc;
+}
+
+/* ===== HEADER ===== */
+.header{
+  text-align:center;
+  font-size:28px;
+  font-weight:800;
+  color:#ef4444; /* Red */
+  margin:20px 0 10px;
+}
+
+/* ===== DEPOSIT TITLE ===== */
+.dep-title-main{
+  text-align:center;
+  font-size:22px;
+  font-weight:700;
+  background: #22c55e; /* Green background */
+  color:#fff;
+  padding:12px;
+  border-radius:12px;
+  margin:10px 20px;
+}
+
+/* ===== ADMIN PANEL CONTAINER ===== */
+.admin-container{
+  max-width:600px;
+  margin:auto;
+  padding:20px;
+}
+
+/* ===== SEARCH BAR ===== */
+#searchDeposit{
+  width:100%;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid #cbd5f5;
+  margin-bottom:12px;
+  font-size:14px;
+}
+
+/* ===== REQUEST CARD ===== */
+.request-card{
+  border:1px solid #cbd5f5;
+  background: rgba(255,255,255,0.05);
+  padding:12px;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+
+.request-card p{
+  margin:4px 0;
+  font-size:14px;
+}
+
+.request-actions{
+  display:flex;
+  gap:10px;
+  margin-top:6px;
+}
+
+.approve-btn{
+  flex:1;
+  background:#22c55e; /* Green */
+  color:#fff;
+  padding:6px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.reject-btn{
+  flex:1;
+  background:#ef4444; /* Red */
+  color:#fff;
+  padding:6px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="header">⚡ PowerMax Admin Panel ⚡</div>
+
+<div class="dep-title-main">💰 Deposit Requests</div>
+
+<div class="admin-container">
+  <input type="text" id="searchDeposit" placeholder="Search by user number / UID / Name...">
+  <div id="depositRequestsContainer">
+    <!-- Deposit Requests will appear here -->
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
+  authDomain: "powermax-3ea77.firebaseapp.com",
+  projectId: "powermax-3ea77",
+  storageBucket: "powermax-3ea77.firebasestorage.app",
+  messagingSenderId: "382941878878",
+  appId: "1:382941878878:web:4472ab183d1534077732cf"
 };
 
-// ===== CLOSE ADMIN PANEL =====
-document.getElementById("closeAdminDeposit").onclick = () => {
-  document.getElementById("adminDepositPanel").style.display = "none";
-};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-// ===== LOAD DEPOSIT REQUESTS =====
 async function loadDepositRequests(filter = "") {
   const container = document.getElementById("depositRequestsContainer");
   container.innerHTML = "Loading...";
@@ -17,11 +131,12 @@ async function loadDepositRequests(filter = "") {
   const querySnapshot = await getDocs(collection(db, "deposits"));
   container.innerHTML = "";
 
+  let found = false;
+
   querySnapshot.forEach(docSnap => {
     const data = docSnap.data();
     const id = docSnap.id;
 
-    // Simple filter
     if (
       filter &&
       !(
@@ -31,52 +146,69 @@ async function loadDepositRequests(filter = "") {
       )
     ) return;
 
-    const div = document.createElement("div");
-    div.style = "border:1px solid #cbd5f5; padding:12px; margin-bottom:8px; border-radius:12px;";
+    found = true;
 
+    const div = document.createElement("div");
+    div.className = "request-card";
     div.innerHTML = `
       <p><b>User:</b> ${data.name} (UID: ${data.uid})</p>
       <p><b>Amount:</b> ${data.amount}</p>
       <p><b>Wallet:</b> ${data.walletType} - ${data.adminWallet}</p>
       <p><b>Sender:</b> ${data.senderName} - ${data.senderNumber}</p>
       <p><b>Status:</b> ${data.status}</p>
-      <div style="display:flex; gap:10px; margin-top:6px;">
-        <button style="flex:1; background:#22c55e; color:#fff; padding:6px; border:none; border-radius:8px; cursor:pointer;" class="approve-btn">Approve</button>
-        <button style="flex:1; background:#ef4444; color:#fff; padding:6px; border:none; border-radius:8px; cursor:pointer;" class="reject-btn">Reject</button>
+      <div class="request-actions">
+        <button class="approve-btn">Approve</button>
+        <button class="reject-btn">Reject</button>
       </div>
     `;
 
     container.appendChild(div);
 
-    // Approve Button
     div.querySelector(".approve-btn").onclick = async () => {
+      // Update user balance
       const userRef = doc(db, "users", data.uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        await updateDoc(userRef, { balance: Number(userData.balance) + Number(data.amount) });
-      }
-
-      await deleteDoc(doc(db, "deposits", id)); // Remove request from Firestore
-      loadDepositRequests(filter); // Refresh list
+      const userSnap = await getDocs(collection(db, "users")); // Fetch user
+      try {
+        const userDoc = await importUserData(data.uid); // helper
+        await updateDoc(userRef, { balance: Number(userDoc.balance) + Number(data.amount) });
+      } catch(e){console.error(e);}
+      
+      // Remove deposit request
+      await deleteDoc(doc(db, "deposits", id));
+      loadDepositRequests(filter);
       alert("Deposit Approved ✅");
     };
 
-    // Reject Button
     div.querySelector(".reject-btn").onclick = async () => {
       await deleteDoc(doc(db, "deposits", id));
-      loadDepositRequests(filter); // Refresh list
+      loadDepositRequests(filter);
       alert("Deposit Rejected ❌");
     };
   });
 
-  if (!container.innerHTML) {
-    container.innerHTML = "<p style='text-align:center;color:#888;'>No deposit requests found.</p>";
-  }
+  if(!found) container.innerHTML = "<p style='text-align:center;color:#888;'>No deposit requests found.</p>";
 }
 
-// ===== SEARCH DEPOSIT =====
-document.getElementById("searchDeposit").addEventListener("input", (e) => {
-  const value = e.target.value.trim();
-  loadDepositRequests(value);
+// Optional helper to fetch a single user (for balance update)
+async function importUserData(uid){
+  const docRef = doc(db,"users",uid);
+  const docSnap = await getDocs(collection(db,"users"));
+  let userData = {};
+  docSnap.forEach(u=>{
+    if(u.id===uid) userData = u.data();
+  });
+  return userData;
+}
+
+// Search filter
+document.getElementById("searchDeposit").addEventListener("input", e => {
+  loadDepositRequests(e.target.value.trim());
 });
+
+// Load all requests initially
+loadDepositRequests();
+
+</script>
+
+</body>
+</html>
