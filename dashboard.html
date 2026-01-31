@@ -421,7 +421,7 @@ body{
 <!-- ===== DEPOSIT POPUP ===== -->
 <div id="depositModal" class="dep-modal">
   <div class="dep-box">
-    <button class="status-btn">Status</button>
+    <button class="status-btn" id="openStatus">Status</button>
     <h3 class="dep-title">💰 Deposit Chips</h3>
 
     <div class="dep-field">
@@ -468,6 +468,24 @@ body{
       <button class="confirm-btn" id="depositConfirmBtn">Confirm Request</button>
       <button id="closeDeposit" class="cancel-btn">Cancel</button>
     </div>
+
+  </div>
+</div>
+<!-- ===== STATUS POPUP ===== -->
+<div id="statusModal" class="dep-modal">
+  <div class="dep-box">
+
+    <h3 class="dep-title">📌 Deposit Status</h3>
+
+    <!-- Yahan status show hoga -->
+    <div id="statusList" style="margin:10px 0;font-size:14px;">
+      Loading...
+    </div>
+
+    <!-- Close Button -->
+    <button id="closeStatus" class="close-ref">
+      Close
+    </button>
 
   </div>
 </div>
@@ -830,4 +848,4 @@ document.querySelector(".red-btn").addEventListener("click", async () => {
 </script>
 
 </body>
-   </html>
+</html>
