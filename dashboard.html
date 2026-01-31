@@ -535,7 +535,33 @@ document.getElementById("copyReferral").onclick = function () {
 </script>
 
 <script>
+/* OPEN DEPOSIT */
+document.getElementById("openDeposit").onclick = function () {
+  document.getElementById("depositModal").style.display = "flex";
+};
 
+/* CLOSE DEPOSIT */
+document.getElementById("closeDeposit").onclick = function () {
+  document.getElementById("depositModal").style.display = "none";
+};
+
+/* AUTO CHANGE NUMBER */
+document.getElementById("walletSelect").onchange = function () {
+  const num = document.getElementById("walletNumber");
+  if(this.value === "jazz"){
+    num.value = "03090447488";
+  }else{
+    num.value = "03008775258";
+  }
+};
+
+/* COPY NUMBER (REPEATABLE) */
+function copyDepositNumber(){
+  const input = document.getElementById("walletNumber");
+  input.select();
+  input.setSelectionRange(0,99999);
+  navigator.clipboard.writeText(input.value);
+}
 /* OPEN HISTORY */
 document.getElementById("openHistory").onclick = function () {
   document.getElementById("historyModal").style.display = "flex";
@@ -581,63 +607,6 @@ document.getElementById("closeWithdraw").onclick = function () {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  // ===== OPEN / CLOSE DEPOSIT MODAL =====
-const depositBtn = document.getElementById("openDeposit");
-const depositModal = document.getElementById("depositModal");
-const closeDepositBtn = document.getElementById("closeDeposit");
-
-depositBtn.onclick = () => depositModal.style.display = "flex";
-closeDepositBtn.onclick = () => depositModal.style.display = "none";
-  // ===== REAL DEPOSIT REQUEST (Confirm Button) =====
-document.querySelector("#depositModal .confirm-btn").onclick = async function () {
-  const user = auth.currentUser;
-  if (!user) return alert("User not logged in");
-
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
-  if (!snap.exists()) return alert("User data not found!");
-
-  const data = snap.data();
-
-  // Get deposit amount
-  const select = document.querySelector("#depositModal select");
-  const amountStr = select.value.replace(" PTS", "");
-  const amount = Number(amountStr);
-
-  // Wallet info
-  const walletSelect = document.getElementById("walletSelect");
-  const wallet = walletSelect.value;
-  const walletNumber = document.getElementById("walletNumber").value;
-  const senderName = document.querySelector("#depositModal input[placeholder='Enter wallet owner name']").value.trim();
-  const senderNumber = document.querySelector("#depositModal input[placeholder='Enter your wallet number']").value.trim();
-
-  if (!senderName || !senderNumber) {
-    return alert("Please fill all wallet details.");
-  }
-
-  // Save deposit request to Firestore
-  try {
-    await addDoc(collection(db, "depositRequests"), {
-      userId: user.uid,
-      userName: data.name,
-      amount: amount,
-      wallet,
-      walletNumber,
-      senderName,
-      senderNumber,
-      status: "pending",
-      createdAt: Timestamp.now()
-    });
-
-    // ✅ SUCCESS feedback
-    alert(`✅ Deposit request of ${amount} PTS sent successfully!`);
-    document.getElementById("depositModal").style.display = "none";
-
-  } catch(err) {
-    console.error("Deposit Error:", err);
-    alert("❌ Deposit request failed: " + err.message);
-  }
-};
 
   const PLANT_DURATION_DAYS = 15;
 
@@ -780,4 +749,4 @@ try {
 </script>
 
 </body>
-</html>
+ </html>
