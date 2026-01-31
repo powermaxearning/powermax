@@ -570,7 +570,7 @@ document.querySelector("#depositModal .confirm-btn").onclick = async function ()
 
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
-  if (!snap.exists()) return;
+  if (!snap.exists()) return alert("User data not found!");
 
   const data = snap.data();
 
@@ -583,10 +583,12 @@ document.querySelector("#depositModal .confirm-btn").onclick = async function ()
   const walletSelect = document.getElementById("walletSelect");
   const wallet = walletSelect.value;
   const walletNumber = document.getElementById("walletNumber").value;
-  const senderName = document.querySelector("#depositModal input[placeholder='Enter wallet owner name']").value;
-  const senderNumber = document.querySelector("#depositModal input[placeholder='Enter your wallet number']").value;
+  const senderName = document.querySelector("#depositModal input[placeholder='Enter wallet owner name']").value.trim();
+  const senderNumber = document.querySelector("#depositModal input[placeholder='Enter your wallet number']").value.trim();
 
-  if (!senderName || !senderNumber) return alert("Please fill all wallet details");
+  if (!senderName || !senderNumber) {
+    return alert("Please fill all wallet details.");
+  }
 
   // Save deposit request to Firestore
   try {
@@ -602,12 +604,13 @@ document.querySelector("#depositModal .confirm-btn").onclick = async function ()
       createdAt: Timestamp.now()
     });
 
-    alert("Deposit request sent to Admin!");
+    // ✅ SUCCESS feedback
+    alert(`✅ Deposit request of ${amount} PTS sent successfully!`);
     document.getElementById("depositModal").style.display = "none";
 
   } catch(err) {
     console.error("Deposit Error:", err);
-    alert("Deposit failed: " + err.message);
+    alert("❌ Deposit request failed: " + err.message);
   }
 };
 /* OPEN HISTORY */
