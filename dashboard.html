@@ -746,6 +746,24 @@ try {
       };
     });
   });
+  </script>
+
+<!-- 🔴 LOGOUT SYSTEM -->
+<script type="module">
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const auth2 = getAuth();
+
+// LOGOUT BUTTON
+document.querySelector(".red-btn").addEventListener("click", async () => {
+  try {
+    await signOut(auth2);
+    alert("Logout Successful!");
+    window.location.href = "index.html";
+  } catch (e) {
+    alert("Logout Error: " + e.message);
+  }
+});
 </script>
 
 </body>
