@@ -746,6 +746,69 @@ try {
       };
     });
   });
+  // ===== DEPOSIT REAL SYSTEM =====
+
+const depositBtn = document.querySelector("#depositModal .confirm-btn");
+
+depositBtn.addEventListener("click", async () => {
+
+  const amount = document.querySelector("#depositModal select").value;
+  const walletType = document.getElementById("walletSelect").value;
+  const adminWallet = document.getElementById("walletNumber").value;
+
+  const senderName =
+    document.querySelectorAll("#depositModal input")[0].value.trim();
+
+  const senderNumber =
+    document.querySelectorAll("#depositModal input")[1].value.trim();
+
+  if (!senderName || !senderNumber) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  const user = auth.currentUser;
+
+  if (!user) {
+    alert("Login again");
+    return;
+  }
+
+  try {
+
+    await addDoc(collection(db, "deposits"), {
+
+      uid: user.uid,
+      name: document.getElementById("uName").innerText,
+
+      amount: amount,
+      walletType: walletType,
+      adminWallet: adminWallet,
+
+      senderName: senderName,
+      senderNumber: senderNumber,
+
+      status: "pending",
+      createdAt: Timestamp.now()
+
+    });
+
+    alert("✅ Deposit Request Sent!");
+
+    // Clear inputs
+    document.querySelectorAll("#depositModal input")[0].value = "";
+    document.querySelectorAll("#depositModal input")[1].value = "";
+
+    // Close modal
+    document.getElementById("depositModal").style.display = "none";
+
+  } catch (err) {
+
+    alert("❌ Deposit Error: " + err.message);
+
+  }
+
+});
   </script>
 
 <!-- 🔴 LOGOUT SYSTEM -->
