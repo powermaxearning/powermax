@@ -421,7 +421,7 @@ body{
 <!-- ===== DEPOSIT POPUP ===== -->
 <div id="depositModal" class="dep-modal">
   <div class="dep-box">
-    <button class="status-btn" id="openStatus">Status</button>
+    <button class="status-btn">Status</button>
     <h3 class="dep-title">💰 Deposit Chips</h3>
 
     <div class="dep-field">
@@ -471,24 +471,6 @@ body{
 
   </div>
 </div>
-<!-- ===== STATUS POPUP ===== -->
-<div id="statusModal" class="dep-modal">
-  <div class="dep-box">
-
-    <h3 class="dep-title">📌 Deposit Status</h3>
-
-    <!-- Yahan status show hoga -->
-    <div id="statusList" style="margin:10px 0;font-size:14px;">
-      Loading...
-    </div>
-
-    <!-- Close Button -->
-    <button id="closeStatus" class="close-ref">
-      Close
-    </button>
-
-  </div>
-</div>
 <!-- ===== WITHDRAW POPUP ===== -->
 <div id="withdrawModal" class="dep-modal">
   <div class="dep-box">
@@ -523,7 +505,9 @@ body{
     </div>
 
     <div class="dep-actions">
-      <button class="confirm-btn">Request Withdraw</button>
+      <button class="confirm-btn" id="withdrawConfirmBtn">
+  Request Withdraw
+</button>
       <button id="closeWithdraw" class="cancel-btn">Cancel</button>
     </div>
 
@@ -597,80 +581,6 @@ document.querySelector(".orange-btn").onclick = function () {
 /* CLOSE WITHDRAW */
 document.getElementById("closeWithdraw").onclick = function () {
   document.getElementById("withdrawModal").style.display = "none";
-};
-/* OPEN STATUS */
-const statusBtn = document.getElementById("openStatus");
-if(statusBtn){
-  statusBtn.onclick = async function () {
-    const statusList = document.getElementById("statusList");
-    statusList.innerHTML = "Loading...";
-
-    const user = auth.currentUser;
-    if(!user) return alert("Login again");
-
-    try {
-      const depositsRef = collection(db, "deposits");
-      const q = query(
-        depositsRef,
-        where("uid", "==", user.uid),
-        orderBy("createdAt", "desc")
-      );
-      const snapshot = await getDocs(q);
-
-      if(snapshot.empty){
-        statusList.innerHTML = "<p>No deposits found.</p>";
-        document.getElementById("statusModal").style.display = "flex";
-        return;
-      }
-
-      let html = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const date = data.createdAt.toDate().toLocaleString(); // Local date/time
-        let statusColor = "";
-        let statusText = "";
-
-        switch(data.status){
-          case "pending":
-            statusColor = "orange";
-            statusText = "Pending";
-            break;
-          case "approved":
-            statusColor = "green";
-            statusText = "Approved";
-            break;
-          case "rejected":
-          case "cancel":
-            statusColor = "red";
-            statusText = "Rejected";
-            break;
-          default:
-            statusColor = "gray";
-            statusText = data.status;
-        }
-
-        html += `
-          <div style="padding:8px; border-bottom:1px solid #ccc;">
-            <strong>Amount:</strong> ${data.amount} PTS<br>
-            <strong>Status:</strong> <span style="color:${statusColor}; font-weight:700;">${statusText}</span><br>
-            <strong>Date:</strong> ${date}
-          </div>
-        `;
-      });
-
-      statusList.innerHTML = html;
-      document.getElementById("statusModal").style.display = "flex";
-
-    } catch (err) {
-      console.error(err);
-      alert("Error fetching status: " + err.message);
-    }
-  };
-}
-
-/* CLOSE STATUS */
-document.getElementById("closeStatus").onclick = function () {
-  document.getElementById("statusModal").style.display = "none";
 };
 </script>
 
@@ -902,6 +812,91 @@ document.getElementById("senderNumber").value = "";
 
 });
   </script>
+  import { doc, getDoc, updateDoc } from
+"https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <script type="module">
+import {
+  getFirestore,
+  addDoc,
+  collection,
+  Timestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+const db = getFirestore();
+const auth = getAuth();
+
+document.getElementById("withdrawConfirmBtn").onclick = async () => {
+
+  const amount = Number(
+    document.querySelector("#withdrawModal input[type='number']").value
+  );
+
+  const method =
+    document.querySelector("#withdrawModal select").value;
+
+  const accountName =
+    document.querySelectorAll("#withdrawModal input")[1].value.trim();
+
+  const accountNumber =
+    document.querySelectorAll("#withdrawModal input")[2].value.trim();
+
+  if (!amount || amount < 10) {
+    alert("Minimum withdraw is 10 PTS");
+    return;
+  }
+
+  if (!accountName || !accountNumber) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Please login again");
+    return;
+  }
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+const userSnap = await getDoc(userRef);
+
+if (!userSnap.exists()) {
+  alert("User not found");
+  return;
+}
+
+const userData = userSnap.data();
+
+if (userData.balance < amount) {
+  alert("Insufficient balance");
+  return;
+}
+
+// 🔻 Balance deduct
+await updateDoc(userRef, {
+  balance: userData.balance - amount
+});
+    await addDoc(collection(db, "withdraws"), {
+      uid: user.uid,
+      amount: amount,
+      method: method,
+      accountName: accountName,
+      accountNumber: accountNumber,
+      status: "pending",
+      createdAt: Timestamp.now()
+    });
+
+    alert("✅ Withdraw request submitted!");
+
+    document.getElementById("withdrawModal").style.display = "none";
+
+  } catch (err) {
+    alert("❌ Withdraw error: " + err.message);
+  }
+};
+</script>
 
 <!-- 🔴 LOGOUT SYSTEM -->
 <script type="module">
@@ -922,4 +917,4 @@ document.querySelector(".red-btn").addEventListener("click", async () => {
 </script>
 
 </body>
-</html>
+ </html>
