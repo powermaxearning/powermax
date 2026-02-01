@@ -505,9 +505,7 @@ body{
     </div>
 
     <div class="dep-actions">
-      <button class="confirm-btn" id="withdrawConfirmBtn">
-  Request Withdraw
-</button>
+      <button class="confirm-btn">Request Withdraw</button>
       <button id="closeWithdraw" class="cancel-btn">Cancel</button>
     </div>
 
@@ -811,92 +809,66 @@ document.getElementById("senderNumber").value = "";
   }
 
 });
-  </script>
-  
 <script type="module">
 import {
-  getFirestore,
-  addDoc,
   collection,
-  Timestamp,
-  doc,
-  getDoc,
-  updateDoc
+  addDoc,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const db = getFirestore();
 const auth = getAuth();
+const db = getFirestore();
 
-document.getElementById("withdrawConfirmBtn").onclick = async () => {
-  const amount = Number(
-    document.querySelector("#withdrawModal input[type='number']").value
-  );
+// Withdraw Confirm Button
+const withdrawBtn = document.querySelector("#withdrawModal .confirm-btn");
 
-  const method =
-    document.querySelector("#withdrawModal select").value;
+withdrawBtn.addEventListener("click", async () => {
 
-  const accountName =
-    document.querySelectorAll("#withdrawModal input")[1].value.trim();
+  const amount = document.querySelector('#withdrawModal input[type="number"]').value;
+  const method = document.querySelector('#withdrawModal select').value;
+  const ownerName = document.querySelectorAll('#withdrawModal input[type="text"]')[0].value.trim();
+  const accountNumber = document.querySelectorAll('#withdrawModal input[type="text"]')[1].value.trim();
 
-  const accountNumber =
-    document.querySelectorAll("#withdrawModal input")[2].value.trim();
-
-  if (!amount || amount < 10) {
-    alert("Minimum withdraw is 10 PTS");
-    return;
-  }
-
-  if (!accountName || !accountNumber) {
-    alert("Please fill all fields");
+  if (!amount || amount < 10 || !ownerName || !accountNumber) {
+    alert("❌ Please fill all fields (Min 10 PTS)");
     return;
   }
 
   const user = auth.currentUser;
   if (!user) {
-    alert("Please login again");
+    alert("Login required");
     return;
   }
 
   try {
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-
-    if (!userSnap.exists()) {
-      alert("User not found");
-      return;
-    }
-
-    const userData = userSnap.data();
-
-    if (userData.balance < amount) {
-      alert("Insufficient balance");
-      return;
-    }
-
-    // Deduct balance
-    await updateDoc(userRef, {
-      balance: userData.balance - amount
-    });
-
     await addDoc(collection(db, "withdraws"), {
       uid: user.uid,
-      amount: amount,
+      name: document.getElementById("uName").innerText,
+      amount: Number(amount),
       method: method,
-      accountName: accountName,
+      ownerName: ownerName,
       accountNumber: accountNumber,
       status: "pending",
       createdAt: Timestamp.now()
     });
 
-    alert("✅ Withdraw request submitted!");
+    alert("✅ Withdraw Request Sent!");
+
+    // Clear fields
+    document.querySelector('#withdrawModal input[type="number"]').value = "";
+    document.querySelectorAll('#withdrawModal input[type="text"]')[0].value = "";
+    document.querySelectorAll('#withdrawModal input[type="text"]')[1].value = "";
+
+    // Close modal
     document.getElementById("withdrawModal").style.display = "none";
 
   } catch (err) {
-    alert("❌ Withdraw error: " + err.message);
+    alert("❌ Withdraw Error: " + err.message);
   }
-};
+});
 </script>
 
 <!-- 🔴 LOGOUT SYSTEM -->
