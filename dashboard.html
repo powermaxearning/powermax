@@ -562,7 +562,6 @@ function copyDepositNumber(){
   input.setSelectionRange(0,99999);
   navigator.clipboard.writeText(input.value);
 }
-<script type="module">
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -636,7 +635,6 @@ openHistoryBtn.onclick = async () => {
 closeHistoryBtn.onclick = () => {
   historyModal.style.display = "none";
 };
-</script>
 /* OPEN WITHDRAW */
 document.querySelector(".orange-btn").onclick = function () {
   document.getElementById("withdrawModal").style.display = "flex";
@@ -980,4 +978,4 @@ document.querySelector(".red-btn").addEventListener("click", async () => {
 </script>
 
 </body>
- </html>
+</html>
