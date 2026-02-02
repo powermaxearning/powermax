@@ -615,11 +615,10 @@ function loadWithdrawHistory() {
   box.innerHTML = "Loading...";
 
   const q = query(
-    collection(db, "withdraws"),
-    where("uid", "==", user.uid),
-    where("status", "==", "success"),
-    orderBy("createdAt", "desc")
-  );
+  collection(db, "withdraws"),
+  where("uid", "==", user.uid),
+  where("status", "==", "success")
+);
 
   // 🔴 Stop old listener (important)
   if (historyUnsub) historyUnsub();
