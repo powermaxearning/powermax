@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -163,11 +163,8 @@ async function loadDepositRequests(filter = "") {
       const userSnap = await getDoc(userRef);
       if(userSnap.exists()){
         const userData = userSnap.data();
-        // Deduct user balance
-        const amountNumber = Number(data.amount); // صرف number
-        await updateDoc(userRef, {
-          balance: (Number(userData.balance || 0) - amountNumber)
-        });
+        const amountNumber = Number(data.amount.replace(" PTS",""));
+        await updateDoc(userRef, { balance: Number(userData.balance || 0) + amountNumber });
       }
 
       await deleteDoc(doc(db, "deposits", id));
@@ -232,6 +229,13 @@ async function loadWithdrawRequests(filter = "") {
 
     // Approve (فی الحال delete)
     div.querySelector(".approve-btn").onclick = async () => {
+      const userRef = doc(db, "users", data.uid);
+const userSnap = await getDoc(userRef);
+if(userSnap.exists()){
+    const userData = userSnap.data();
+    const amountNumber = Number(data.amount.replace(" PTS",""));
+    await updateDoc(userRef, { balance: (Number(userData.balance || 0) - amountNumber) });
+}
       await deleteDoc(doc(db, "withdraws", id));
       loadWithdrawRequests(filter);
       alert("Withdraw Approved ✅");
