@@ -831,7 +831,6 @@ const db = getFirestore();
 const withdrawBtn = document.querySelector("#withdrawModal .confirm-btn");
 
 withdrawBtn.addEventListener("click", async () => {
-
   const amount = document.querySelector('#withdrawModal input[type="number"]').value;
   const method = document.querySelector('#withdrawModal select').value;
   const ownerName = document.querySelectorAll('#withdrawModal input[type="text"]')[0].value.trim();
@@ -849,6 +848,18 @@ withdrawBtn.addEventListener("click", async () => {
   }
 
   try {
+    // 👀 24-hour withdraw check
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const userData = userDoc.data();
+    if (userData.lastWithdrawAt) {
+      const lastTime = userData.lastWithdrawAt.toMillis();
+      const now = Date.now();
+      if (now - lastTime < 24 * 60 * 60 * 1000) {
+        alert("❌ You can only withdraw once every 24 hours.");
+        return;
+      }
+    }
+
     await addDoc(collection(db, "withdraws"), {
       uid: user.uid,
       name: document.getElementById("uName").innerText,
@@ -858,6 +869,11 @@ withdrawBtn.addEventListener("click", async () => {
       accountNumber: accountNumber,
       status: "pending",
       createdAt: Timestamp.now()
+    });
+
+    // Update lastWithdrawAt
+    await updateDoc(doc(db, "users", user.uid), {
+      lastWithdrawAt: Timestamp.now()
     });
 
     alert("✅ Withdraw Request Sent!");
@@ -895,4 +911,4 @@ document.querySelector(".red-btn").addEventListener("click", async () => {
 </script>
 
 </body>
- </html>
+</html>
