@@ -558,8 +558,8 @@ document.getElementById("walletSelect").onchange = function () {
 /* COPY NUMBER (REPEATABLE) */
 function copyDepositNumber(){
   const input = document.getElementById("walletNumber");
-  nput.select();
-  input.setSelectionRange(0,99999);
+  input.select();
+  input.setSelectionRange(0, 99999);
   navigator.clipboard.writeText(input.value);
 }
 
@@ -648,17 +648,17 @@ async function loadWithdrawHistory() {
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
   import {
-    getFirestore,
-    doc,
-    getDoc,
-    updateDoc,
-    Timestamp,
-    addDoc,
-    collection
-    query,
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  Timestamp,
+  addDoc,
+  collection,
+  query,
   where,
   getDocs,
-  orderBy,
+  orderBy
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
