@@ -158,7 +158,7 @@ async function loadDepositRequests(filter = "") {
     container.appendChild(div);
 
     // ✅ Approve
-    div.querySelector(".approve-btn").onclick = async () => {
+    div.querySelector(".approve-btn").addEventListener("click", async () => {
       const userRef = doc(db, "users", data.uid);
       const userSnap = await getDoc(userRef);
       if(userSnap.exists()){
