@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Admin Login - PowerMax</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body{
   display:flex;
@@ -37,6 +38,7 @@ h2{margin-bottom:20px;color:#38bdf8;}
 p{font-size:14px;color:#f8fafc;opacity:0.8;}
 </style>
 </head>
+
 <body>
 
 <div class="login-box">
@@ -65,15 +67,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// ✅ Make session persistent (browserLocalPersistence)
+// ✅ Make session persistent (local browser storage)
 setPersistence(auth, browserLocalPersistence);
+
+const allowedAdminEmail = "powermaxearning@gmail.com";
 
 document.getElementById("loginBtn").onclick = async () => {
   try {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    if(user.email !== "powermaxearning@gmail.com"){
+    if(user.email !== allowedAdminEmail){
       alert("❌ Unauthorized Gmail! Only admin can login.");
       await signOut(auth);
       return;
@@ -88,10 +92,9 @@ document.getElementById("loginBtn").onclick = async () => {
   }
 };
 
-// ✅ Check if already logged in
+// ✅ Auto redirect if already logged in
 onAuthStateChanged(auth, (user) => {
-  if(user && user.email === "powermaxearning@gmail.com"){
-    // If already logged in, redirect automatically
+  if(user && user.email === allowedAdminEmail){
     window.location.href = "admin.html";
   }
 });
