@@ -558,7 +558,7 @@ document.getElementById("walletSelect").onchange = function () {
 /* COPY NUMBER (REPEATABLE) */
 function copyDepositNumber(){
   const input = document.getElementById("walletNumber");
-  input.select();
+  nput.select();
   input.setSelectionRange(0,99999);
   navigator.clipboard.writeText(input.value);
 }
@@ -751,16 +751,11 @@ try {
 const depositBtn = document.getElementById("depositConfirmBtn");
 
 depositBtn.addEventListener("click", async () => {
-
   const amount = document.querySelector("#depositModal select").value;
   const walletType = document.getElementById("walletSelect").value;
   const adminWallet = document.getElementById("walletNumber").value;
-
-  const senderName =
-document.getElementById("senderName").value.trim();
-
-const senderNumber =
-document.getElementById("senderNumber").value.trim();
+  const senderName = document.getElementById("senderName").value.trim();
+  const senderNumber = document.getElementById("senderNumber").value.trim();
 
   if (!senderName || !senderNumber) {
     alert("Please fill all fields");
@@ -768,46 +763,54 @@ document.getElementById("senderNumber").value.trim();
   }
 
   const user = auth.currentUser;
-
   if (!user) {
     alert("Login again");
     return;
   }
 
   try {
+    // 👀 24-hour deposit check
+    const lastDepositQuery = await getDoc(doc(db, "users", user.uid));
+    const lastDepositData = lastDepositQuery.data();
+    if (lastDepositData.lastDepositAt) {
+      const lastTime = lastDepositData.lastDepositAt.toMillis();
+      const now = Date.now();
+      if (now - lastTime < 24 * 60 * 60 * 1000) {
+        alert("❌ You can only deposit once every 24 hours.");
+        return;
+      }
+    }
 
+    // Deposit collection
     await addDoc(collection(db, "deposits"), {
-
       uid: user.uid,
       name: document.getElementById("uName").innerText,
-
       amount: amount,
       walletType: walletType,
       adminWallet: adminWallet,
-
       senderName: senderName,
       senderNumber: senderNumber,
-
       status: "pending",
       createdAt: Timestamp.now()
+    });
 
+    // Update lastDepositAt
+    await updateDoc(doc(db, "users", user.uid), {
+      lastDepositAt: Timestamp.now()
     });
 
     alert("✅ Deposit Request Sent!");
 
     // Clear inputs
     document.getElementById("senderName").value = "";
-document.getElementById("senderNumber").value = "";
+    document.getElementById("senderNumber").value = "";
 
     // Close modal
     document.getElementById("depositModal").style.display = "none";
 
   } catch (err) {
-
     alert("❌ Deposit Error: " + err.message);
-
   }
-
 });
 </script>
 
