@@ -23,7 +23,7 @@ body{
   max-width:400px;
 }
 button{
-  padding:12px 20px;
+  padding:14px 20px;
   border:none;
   border-radius:12px;
   font-weight:700;
@@ -47,7 +47,10 @@ p{font-size:14px;color:#f8fafc;opacity:0.8;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+  getAuth, signInWithPopup, GoogleAuthProvider, 
+  onAuthStateChanged, signOut, setPersistence, browserLocalPersistence 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
@@ -62,7 +65,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// ✅ Button login
+// ✅ Make session persistent (browserLocalPersistence)
+setPersistence(auth, browserLocalPersistence);
+
 document.getElementById("loginBtn").onclick = async () => {
   try {
     const result = await signInWithPopup(auth, provider);
@@ -83,9 +88,10 @@ document.getElementById("loginBtn").onclick = async () => {
   }
 };
 
-// ✅ Persistent session
+// ✅ Check if already logged in
 onAuthStateChanged(auth, (user) => {
   if(user && user.email === "powermaxearning@gmail.com"){
+    // If already logged in, redirect automatically
     window.location.href = "admin.html";
   }
 });
