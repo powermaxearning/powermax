@@ -5,11 +5,36 @@
 <title>Admin Login - PowerMax</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{display:flex;justify-content:center;align-items:center;height:100vh;background:#020617;color:#fff;font-family:system-ui}
-.login-box{background:rgba(255,255,255,0.05);padding:30px;border-radius:18px;text-align:center;width:90%;max-width:400px}
-button{padding:12px 20px;border:none;border-radius:12px;font-weight:700;background:#2563eb;color:#fff;cursor:pointer;margin-top:20px;font-size:16px}
-h2{margin-bottom:20px;color:#38bdf8}
-p{font-size:14px;color:#f8fafc;opacity:0.8}
+body{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  background:#020617;
+  color:#fff;
+  font-family:system-ui;
+}
+.login-box{
+  background:rgba(255,255,255,0.05);
+  padding:30px;
+  border-radius:18px;
+  text-align:center;
+  width:90%;
+  max-width:400px;
+}
+button{
+  padding:12px 20px;
+  border:none;
+  border-radius:12px;
+  font-weight:700;
+  background:#2563eb;
+  color:#fff;
+  cursor:pointer;
+  margin-top:20px;
+  font-size:16px;
+}
+h2{margin-bottom:20px;color:#38bdf8;}
+p{font-size:14px;color:#f8fafc;opacity:0.8;}
 </style>
 </head>
 <body>
@@ -22,7 +47,7 @@ p{font-size:14px;color:#f8fafc;opacity:0.8}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
@@ -43,13 +68,13 @@ document.getElementById("loginBtn").onclick = async () => {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    if (user.email !== "powermaxearning@gmail.com") {
+    if(user.email !== "powermaxearning@gmail.com"){
       alert("❌ Unauthorized Gmail! Only admin can login.");
-      await auth.signOut();
+      await signOut(auth);
       return;
     }
 
-    // Redirect to admin panel
+    // ✅ Redirect to admin panel
     window.location.href = "admin.html";
 
   } catch (err) {
@@ -58,9 +83,9 @@ document.getElementById("loginBtn").onclick = async () => {
   }
 };
 
-// ✅ Persistent session: automatically redirect if already logged in
+// ✅ Persistent session
 onAuthStateChanged(auth, (user) => {
-  if (user && user.email === "powermaxearning@gmail.com") {
+  if(user && user.email === "powermaxearning@gmail.com"){
     window.location.href = "admin.html";
   }
 });
