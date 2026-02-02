@@ -6,248 +6,143 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-*{
-  margin:0; padding:0; box-sizing:border-box; font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-}
-body{
-  background: linear-gradient(180deg,#020617,#0b1224,#020617);
-  color: #f8fafc;
-}
-.header{
-  text-align:center;
-  font-size:28px;
-  font-weight:800;
-  color:#ef4444; 
-  margin:20px 0 10px;
-}
-.dep-title-main{
-  text-align:center;
-  font-size:22px;
-  font-weight:700;
-  background: #22c55e; 
-  color:#fff;
-  padding:12px;
-  border-radius:12px;
-  margin:10px 20px;
-}
-.admin-container{
-  max-width:600px;
-  margin:auto;
-  padding:20px;
-}
-#searchDeposit{
-  width:100%;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid #cbd5f5;
-  margin-bottom:12px;
-  font-size:14px;
-}
-.request-card{
-  border:1px solid #cbd5f5;
-  background: rgba(255,255,255,0.05);
-  padding:12px;
-  border-radius:12px;
-  margin-bottom:10px;
-}
-.request-card p{
-  margin:4px 0;
-  font-size:14px;
-}
-.request-actions{
-  display:flex;
-  gap:10px;
-  margin-top:6px;
-}
-.approve-btn{
-  flex:1;
-  background:#22c55e; 
-  color:#fff;
-  padding:6px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-.reject-btn{
-  flex:1;
-  background:#ef4444; 
-  color:#fff;
-  padding:6px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#020617;color:#f8fafc}
+h2{text-align:center;margin:20px 0;color:#38bdf8}
+.section{margin:20px auto;max-width:700px}
+.card{border:1px solid #334155;border-radius:14px;padding:14px;margin-bottom:12px;background:#020617}
+.actions{display:flex;gap:10px;margin-top:10px}
+button{flex:1;padding:8px;border:none;border-radius:10px;font-weight:700;cursor:pointer}
+.approve{background:#22c55e}
+.reject{background:#ef4444;color:#fff}
 </style>
 </head>
+
 <body>
 
-<div class="header">⚡ PowerMax Admin Panel ⚡</div>
-<div class="dep-title-main">💰 Deposit Requests</div>
+<h2>⚡ PowerMax Admin Panel ⚡</h2>
 
-<div class="admin-container">
-  <input type="text" id="searchDeposit" placeholder="Search by user number / UID / Name...">
-  <div id="depositRequestsContainer">
-    Loading...
-  </div>
+<div class="section">
+  <h3>💰 Deposit Requests</h3>
+  <div id="depositList">Loading...</div>
+</div>
+
+<div class="section">
+  <h3>💸 Withdraw Requests</h3>
+  <div id="withdrawList">Loading...</div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-async function loadDepositRequests(filter = "") {
-  const container = document.getElementById("depositRequestsContainer");
-  container.innerHTML = "Loading...";
-
-  const querySnapshot = await getDocs(collection(db, "deposits"));
-  container.innerHTML = "";
-  let found = false;
-
-  for(const docSnap of querySnapshot.docs){
-    const data = docSnap.data();
-    const id = docSnap.id;
-
-    if(
-      filter &&
-      !(
-        data.senderNumber.includes(filter) ||
-        data.uid.includes(filter) ||
-        (data.senderName && data.senderName.toLowerCase().includes(filter.toLowerCase()))
-      )
-    ) continue;
-
-    found = true;
-
-    const div = document.createElement("div");
-    div.className = "request-card";
-    div.innerHTML = `
-      <p><b>User:</b> ${data.name} (UID: ${data.uid})</p>
-      <p><b>Amount:</b> ${data.amount}</p>
-      <p><b>Wallet:</b> ${data.walletType} - ${data.adminWallet}</p>
-      <p><b>Sender:</b> ${data.senderName} - ${data.senderNumber}</p>
-      <p><b>Status:</b> ${data.status}</p>
-      <div class="request-actions">
-        <button class="approve-btn">Approve</button>
-        <button class="reject-btn">Reject</button>
-      </div>
-    `;
-
-    container.appendChild(div);
-
-    div.querySelector(".approve-btn").onclick = async () => {
-      const userRef = doc(db, "users", data.uid);
-      const userSnap = await getDoc(userRef);
-      if(userSnap.exists()){
-        const userData = userSnap.data();
-        await updateDoc(userRef, { balance: Number(userData.balance || 0) + Number(data.amount) });
-      }
-
-      await deleteDoc(doc(db, "deposits", id));
-      loadDepositRequests(filter);
-      alert("Deposit Approved ✅");
-    };
-
-    div.querySelector(".reject-btn").onclick = async () => {
-      await deleteDoc(doc(db, "deposits", id));
-      loadDepositRequests(filter);
-      alert("Deposit Rejected ❌");
-    };
-  }
-
-  if(!found) container.innerHTML = "<p style='text-align:center;color:#888;'>No deposit requests found.</p>";
-}
-
-// Search filter
-document.getElementById("searchDeposit").addEventListener("input", e => {
-  loadDepositRequests(e.target.value.trim());
-});
-
-// Initial load
-loadDepositRequests();
-import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, collection, getDocs,
+  doc, getDoc, updateDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
   authDomain: "powermax-3ea77.firebaseapp.com",
-  projectId: "powermax-3ea77",
-  storageBucket: "powermax-3ea77.firebasestorage.app",
-  messagingSenderId: "382941878878",
-  appId: "1:382941878878:web:4472ab183d1534077732cf"
+  projectId: "powermax-3ea77"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function loadDepositRequests(filter = "") {
-  const container = document.getElementById("depositRequestsContainer");
-  container.innerHTML = "Loading...";
+/* ================= DEPOSIT ================= */
+async function loadDeposits(){
+  const box = document.getElementById("depositList");
+  box.innerHTML = "";
 
-  const querySnapshot = await getDocs(collection(db, "deposits"));
-  container.innerHTML = "";
-  let found = false;
-
-  for(const docSnap of querySnapshot.docs){
-    const data = docSnap.data();
-    const id = docSnap.id;
-
-    if(
-      filter &&
-      !(
-        data.senderNumber.includes(filter) ||
-        data.uid.includes(filter) ||
-        (data.senderName && data.senderName.toLowerCase().includes(filter.toLowerCase()))
-      )
-    ) continue;
-
-    found = true;
-
+  const snap = await getDocs(collection(db,"deposits"));
+  snap.forEach(d=>{
+    const data = d.data();
     const div = document.createElement("div");
-    div.className = "request-card";
-    div.innerHTML = `
-      <p><b>User:</b> ${data.name} (UID: ${data.uid})</p>
+    div.className="card";
+    div.innerHTML=`
+      <p><b>User:</b> ${data.name} (${data.uid})</p>
       <p><b>Amount:</b> ${data.amount}</p>
-      <p><b>Wallet:</b> ${data.walletType} - ${data.adminWallet}</p>
-      <p><b>Sender:</b> ${data.senderName} - ${data.senderNumber}</p>
-      <p><b>Status:</b> ${data.status}</p>
-      <div class="request-actions">
-        <button class="approve-btn">Approve</button>
-        <button class="reject-btn">Reject</button>
+      <p><b>From:</b> ${data.senderName} - ${data.senderNumber}</p>
+      <div class="actions">
+        <button class="approve">Approve</button>
+        <button class="reject">Reject</button>
       </div>
     `;
+    box.appendChild(div);
 
-    container.appendChild(div);
-
-    div.querySelector(".approve-btn").onclick = async () => {
-      // Get user ref and update balance
-      const userRef = doc(db, "users", data.uid);
+    // APPROVE → ADD BALANCE
+    div.querySelector(".approve").onclick = async ()=>{
+      const userRef = doc(db,"users",data.uid);
       const userSnap = await getDoc(userRef);
-      if(userSnap.exists()){
-        const userData = userSnap.data();
-        await updateDoc(userRef, { balance: Number(userData.balance || 0) + Number(data.amount) });
-      }
+      if(!userSnap.exists()) return alert("User not found");
 
-      // Delete deposit request
-      await deleteDoc(doc(db, "deposits", id));
-      loadDepositRequests(filter);
+      const amount = Number(data.amount.replace(" PTS",""));
+      await updateDoc(userRef,{
+        balance:(userSnap.data().balance||0)+amount
+      });
+
+      await deleteDoc(doc(db,"deposits",d.id));
+      loadDeposits();
       alert("Deposit Approved ✅");
     };
 
-    div.querySelector(".reject-btn").onclick = async () => {
-      await deleteDoc(doc(db, "deposits", id));
-      loadDepositRequests(filter);
+    // REJECT
+    div.querySelector(".reject").onclick = async ()=>{
+      await deleteDoc(doc(db,"deposits",d.id));
+      loadDeposits();
       alert("Deposit Rejected ❌");
     };
-  }
-
-  if(!found) container.innerHTML = "<p style='text-align:center;color:#888;'>No deposit requests found.</p>";
+  });
 }
 
-// Search filter
-document.getElementById("searchDeposit").addEventListener("input", e => {
-  loadDepositRequests(e.target.value.trim());
-});
+/* ================= WITHDRAW ================= */
+async function loadWithdraws(){
+  const box = document.getElementById("withdrawList");
+  box.innerHTML = "";
 
-// Initial load
-loadDepositRequests();
+  const snap = await getDocs(collection(db,"withdraws"));
+  snap.forEach(d=>{
+    const data = d.data();
+    const div = document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <p><b>User:</b> ${data.name} (${data.uid})</p>
+      <p><b>Amount:</b> ${data.amount} PTS</p>
+      <p><b>Method:</b> ${data.method}</p>
+      <p><b>Account:</b> ${data.ownerName} - ${data.accountNumber}</p>
+      <div class="actions">
+        <button class="approve">Approve</button>
+        <button class="reject">Reject</button>
+      </div>
+    `;
+    box.appendChild(div);
 
+    // APPROVE → MINUS BALANCE
+    div.querySelector(".approve").onclick = async ()=>{
+      const userRef = doc(db,"users",data.uid);
+      const userSnap = await getDoc(userRef);
+      if(!userSnap.exists()) return alert("User not found");
+
+      const bal = Number(userSnap.data().balance||0);
+      if(bal < data.amount) return alert("Insufficient balance");
+
+      await updateDoc(userRef,{ balance: bal - data.amount });
+      await deleteDoc(doc(db,"withdraws",d.id));
+
+      loadWithdraws();
+      alert("Withdraw Approved ✅");
+    };
+
+    // REJECT
+    div.querySelector(".reject").onclick = async ()=>{
+      await deleteDoc(doc(db,"withdraws",d.id));
+      loadWithdraws();
+      alert("Withdraw Rejected ❌");
+    };
+  });
+}
+
+loadDeposits();
+loadWithdraws();
 </script>
 
 </body>
