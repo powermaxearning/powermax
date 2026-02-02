@@ -605,49 +605,6 @@ function loadDummyHistory() {
   `;
 }
 */
-let historyUnsub = null;
-
-function loadWithdrawHistory() {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const box = document.getElementById("historyContent");
-  box.innerHTML = "Loading...";
-
-  const q = query(
-  collection(db, "withdraws"),
-  where("uid", "==", user.uid),
-  where("status", "==", "success")
-);
-
-  // 🔴 Stop old listener (important)
-  if (historyUnsub) historyUnsub();
-
-  // 🟢 REAL-TIME STREAM
-  historyUnsub = onSnapshot(q, (snap) => {
-    box.innerHTML = "";
-
-    if (snap.empty) {
-      box.innerHTML = "<p>No successful withdrawals</p>";
-      return;
-    }
-
-    snap.forEach(docu => {
-      const d = docu.data();
-      const date = d.createdAt.toDate().toLocaleString();
-
-      box.innerHTML += `
-        <div style="border-bottom:1px solid #ddd;padding:8px 0;display:flex;justify-content:space-between;">
-          <div>
-            <b>${d.amount} PTS</b><br>
-            <small>${date}</small>
-          </div>
-          <span style="color:green;font-weight:700;">Withdrawal Successful</span>
-        </div>
-      `;
-    });
-  });
-}
 </script>
 
 <script type="module">
@@ -682,6 +639,47 @@ import {
   const db = getFirestore(app);
   window.auth = auth;
 window.db = db;
+let historyUnsub = null;
+
+window.loadWithdrawHistory = function () {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const box = document.getElementById("historyContent");
+  box.innerHTML = "Loading...";
+
+  const q = query(
+    collection(db, "withdraws"),
+    where("uid", "==", user.uid),
+    where("status", "==", "success")
+  );
+
+  if (historyUnsub) historyUnsub();
+
+  historyUnsub = onSnapshot(q, (snap) => {
+    box.innerHTML = "";
+
+    if (snap.empty) {
+      box.innerHTML = "<p>No successful withdrawals</p>";
+      return;
+    }
+
+    snap.forEach(d => {
+      const data = d.data();
+      const date = data.createdAt?.toDate().toLocaleString() || "";
+
+      box.innerHTML += `
+        <div style="border-bottom:1px solid #ddd;padding:8px 0;display:flex;justify-content:space-between;">
+          <div>
+            <b>${data.amount} PTS</b><br>
+            <small>${date}</small>
+          </div>
+          <span style="color:green;font-weight:700;">Withdrawal Successful</span>
+        </div>
+      `;
+    });
+  });
+};
 
   const PLANT_DURATION_DAYS = 15;
 
