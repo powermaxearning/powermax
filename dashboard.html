@@ -605,7 +605,9 @@ function loadDummyHistory() {
   `;
 }
 */
-async function loadWithdrawHistory() {
+let historyUnsub = null;
+
+function loadWithdrawHistory() {
   const user = auth.currentUser;
   if (!user) return;
 
@@ -619,27 +621,32 @@ async function loadWithdrawHistory() {
     orderBy("createdAt", "desc")
   );
 
-  const snap = await getDocs(q);
-  box.innerHTML = "";
+  // 🔴 Stop old listener (important)
+  if (historyUnsub) historyUnsub();
 
-  if (snap.empty) {
-    box.innerHTML = "<p>No successful withdrawals</p>";
-    return;
-  }
+  // 🟢 REAL-TIME STREAM
+  historyUnsub = onSnapshot(q, (snap) => {
+    box.innerHTML = "";
 
-  snap.forEach(docu => {
-    const d = docu.data();
-    const date = d.createdAt.toDate().toLocaleString();
+    if (snap.empty) {
+      box.innerHTML = "<p>No successful withdrawals</p>";
+      return;
+    }
 
-    box.innerHTML += `
-      <div style="border-bottom:1px solid #ddd;padding:8px 0;display:flex;justify-content:space-between;">
-        <div>
-          <b>${d.amount} PTS</b><br>
-          <small>${date}</small>
+    snap.forEach(docu => {
+      const d = docu.data();
+      const date = d.createdAt.toDate().toLocaleString();
+
+      box.innerHTML += `
+        <div style="border-bottom:1px solid #ddd;padding:8px 0;display:flex;justify-content:space-between;">
+          <div>
+            <b>${d.amount} PTS</b><br>
+            <small>${date}</small>
+          </div>
+          <span style="color:green;font-weight:700;">Withdrawal Successful</span>
         </div>
-        <span style="color:green;font-weight:700;">Withdrawal Successful</span>
-      </div>
-    `;
+      `;
+    });
   });
 }
 </script>
@@ -647,7 +654,7 @@ async function loadWithdrawHistory() {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import {
+import {
   getFirestore,
   doc,
   getDoc,
@@ -658,7 +665,8 @@ async function loadWithdrawHistory() {
   query,
   where,
   getDocs,
-  orderBy
+  orderBy,
+  onSnapshot
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -673,7 +681,7 @@ async function loadWithdrawHistory() {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
- window.auth = auth;
+  window.auth = auth;
 window.db = db;
 
   const PLANT_DURATION_DAYS = 15;
