@@ -15,6 +15,7 @@ h2{text-align:center;margin:20px 0;color:#38bdf8}
 button{flex:1;padding:8px;border:none;border-radius:10px;font-weight:700;cursor:pointer}
 .approve{background:#22c55e}
 .reject{background:#ef4444;color:#fff}
+button:disabled{opacity:.6;cursor:not-allowed}
 </style>
 </head>
 
@@ -56,6 +57,8 @@ async function loadDeposits(){
   const snap = await getDocs(collection(db,"deposits"));
   snap.forEach(d=>{
     const data = d.data();
+    let isProcessing = false;
+
     const div = document.createElement("div");
     div.className="card";
     div.innerHTML=`
@@ -69,24 +72,45 @@ async function loadDeposits(){
     `;
     box.appendChild(div);
 
-    // APPROVE → ADD BALANCE
-    div.querySelector(".approve").onclick = async ()=>{
-      const userRef = doc(db,"users",data.uid);
-      const userSnap = await getDoc(userRef);
-      if(!userSnap.exists()) return alert("User not found");
+    const approveBtn = div.querySelector(".approve");
+    const rejectBtn  = div.querySelector(".reject");
 
-      const amount = Number(data.amount.replace(" PTS",""));
-      await updateDoc(userRef,{
-        balance:(userSnap.data().balance||0)+amount
-      });
+    // APPROVE → ADD BALANCE (SAFE)
+    approveBtn.onclick = async ()=>{
+      if(isProcessing) return;
+      isProcessing = true;
 
-      await deleteDoc(doc(db,"deposits",d.id));
-      loadDeposits();
-      alert("Deposit Approved ✅");
+      approveBtn.disabled = true;
+      rejectBtn.disabled = true;
+      approveBtn.innerText = "Processing...";
+
+      try{
+        const userRef = doc(db,"users",data.uid);
+        const userSnap = await getDoc(userRef);
+        if(!userSnap.exists()) return alert("User not found");
+
+        const amount = Number(data.amount.replace(" PTS",""));
+        await updateDoc(userRef,{
+          balance:(userSnap.data().balance||0)+amount
+        });
+
+        await deleteDoc(doc(db,"deposits",d.id));
+        loadDeposits();
+        alert("Deposit Approved ✅");
+      }catch(e){
+        console.error(e);
+        alert("Error");
+      }
     };
 
-    // REJECT
-    div.querySelector(".reject").onclick = async ()=>{
+    // REJECT (SAFE)
+    rejectBtn.onclick = async ()=>{
+      if(isProcessing) return;
+      isProcessing = true;
+
+      approveBtn.disabled = true;
+      rejectBtn.disabled = true;
+
       await deleteDoc(doc(db,"deposits",d.id));
       loadDeposits();
       alert("Deposit Rejected ❌");
@@ -102,6 +126,8 @@ async function loadWithdraws(){
   const snap = await getDocs(collection(db,"withdraws"));
   snap.forEach(d=>{
     const data = d.data();
+    let isProcessing = false;
+
     const div = document.createElement("div");
     div.className="card";
     div.innerHTML=`
@@ -116,24 +142,47 @@ async function loadWithdraws(){
     `;
     box.appendChild(div);
 
-    // APPROVE → MINUS BALANCE
-    div.querySelector(".approve").onclick = async ()=>{
-      const userRef = doc(db,"users",data.uid);
-      const userSnap = await getDoc(userRef);
-      if(!userSnap.exists()) return alert("User not found");
+    const approveBtn = div.querySelector(".approve");
+    const rejectBtn  = div.querySelector(".reject");
 
-      const bal = Number(userSnap.data().balance||0);
-      if(bal < data.amount) return alert("Insufficient balance");
+    // APPROVE → MINUS BALANCE (SAFE)
+    approveBtn.onclick = async ()=>{
+      if(isProcessing) return;
+      isProcessing = true;
 
-      await updateDoc(userRef,{ balance: bal - data.amount });
-      await deleteDoc(doc(db,"withdraws",d.id));
+      approveBtn.disabled = true;
+      rejectBtn.disabled = true;
+      approveBtn.innerText = "Processing...";
 
-      loadWithdraws();
-      alert("Withdraw Approved ✅");
+      try{
+        const userRef = doc(db,"users",data.uid);
+        const userSnap = await getDoc(userRef);
+        if(!userSnap.exists()) return alert("User not found");
+
+        const bal = Number(userSnap.data().balance||0);
+        const amount = Number(data.amount);
+
+        if(bal < amount) return alert("Insufficient balance");
+
+        await updateDoc(userRef,{ balance: bal - amount });
+        await deleteDoc(doc(db,"withdraws",d.id));
+
+        loadWithdraws();
+        alert("Withdraw Approved ✅");
+      }catch(e){
+        console.error(e);
+        alert("Error");
+      }
     };
 
-    // REJECT
-    div.querySelector(".reject").onclick = async ()=>{
+    // REJECT (SAFE)
+    rejectBtn.onclick = async ()=>{
+      if(isProcessing) return;
+      isProcessing = true;
+
+      approveBtn.disabled = true;
+      rejectBtn.disabled = true;
+
       await deleteDoc(doc(db,"withdraws",d.id));
       loadWithdraws();
       alert("Withdraw Rejected ❌");
