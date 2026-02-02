@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -35,7 +35,7 @@ body{
   margin:auto;
   padding:20px;
 }
-#searchDeposit, #searchWithdraw{
+#searchDeposit{
   width:100%;
   padding:10px;
   border-radius:12px;
@@ -82,17 +82,24 @@ body{
 <body>
 
 <div class="header">⚡ PowerMax Admin Panel ⚡</div>
-
 <div class="dep-title-main">💰 Deposit Requests</div>
+
 <div class="admin-container">
   <input type="text" id="searchDeposit" placeholder="Search by user number / UID / Name...">
-  <div id="depositRequestsContainer">Loading...</div>
+  <div id="depositRequestsContainer">
+    Loading...
+  </div>
+</div>
+<!-- ===== WITHDRAW SECTION ===== -->
+<div class="dep-title-main" style="background:#ef4444;">
+  💸 Withdraw Requests
 </div>
 
-<div class="dep-title-main" style="background:#ef4444;">💸 Withdraw Requests</div>
 <div class="admin-container">
   <input type="text" id="searchWithdraw" placeholder="Search by UID / Name...">
-  <div id="withdrawRequestsContainer">Loading...</div>
+  <div id="withdrawRequestsContainer">
+    Loading...
+  </div>
 </div>
 
 <script type="module">
@@ -111,10 +118,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ================= DEPOSIT (UNCHANGED) ================= */
 async function loadDepositRequests(filter = "") {
   const container = document.getElementById("depositRequestsContainer");
   container.innerHTML = "Loading...";
+
   const querySnapshot = await getDocs(collection(db, "deposits"));
   container.innerHTML = "";
   let found = false;
@@ -147,20 +154,25 @@ async function loadDepositRequests(filter = "") {
         <button class="reject-btn">Reject</button>
       </div>
     `;
+
     container.appendChild(div);
 
+    // ✅ Approve
     div.querySelector(".approve-btn").onclick = async () => {
       const userRef = doc(db, "users", data.uid);
       const userSnap = await getDoc(userRef);
       if(userSnap.exists()){
+        const userData = userSnap.data();
         const amountNumber = Number(data.amount.replace(" PTS",""));
-        await updateDoc(userRef, { balance: Number(userSnap.data().balance || 0) + amountNumber });
+        await updateDoc(userRef, { balance: Number(userData.balance || 0) + amountNumber });
       }
+
       await deleteDoc(doc(db, "deposits", id));
       loadDepositRequests(filter);
       alert("Deposit Approved ✅");
     };
 
+    // ✅ Reject
     div.querySelector(".reject-btn").onclick = async () => {
       await deleteDoc(doc(db, "deposits", id));
       loadDepositRequests(filter);
@@ -170,11 +182,10 @@ async function loadDepositRequests(filter = "") {
 
   if(!found) container.innerHTML = "<p style='text-align:center;color:#888;'>No deposit requests found.</p>";
 }
-
-/* ================= WITHDRAW (FIXED) ================= */
 async function loadWithdrawRequests(filter = "") {
   const container = document.getElementById("withdrawRequestsContainer");
   container.innerHTML = "Loading...";
+
   const querySnapshot = await getDocs(collection(db, "withdraws"));
   container.innerHTML = "";
   let found = false;
@@ -206,37 +217,21 @@ async function loadWithdrawRequests(filter = "") {
         <button class="reject-btn">Reject</button>
       </div>
     `;
+
     container.appendChild(div);
 
+    // Reject → delete → فوراً غائب
     div.querySelector(".reject-btn").onclick = async () => {
       await deleteDoc(doc(db, "withdraws", id));
       loadWithdrawRequests(filter);
       alert("Withdraw Rejected ❌");
     };
 
-    // ✅ FIXED APPROVE
+    // Approve (فی الحال delete)
     div.querySelector(".approve-btn").onclick = async () => {
-      const userRef = doc(db, "users", data.uid);
-      const userSnap = await getDoc(userRef);
-
-      if(!userSnap.exists()){
-        alert("User not found ❌");
-        return;
-      }
-
-      const balance = Number(userSnap.data().balance || 0);
-      const amount = Number(data.amount);
-
-      if(balance < amount){
-        alert("Insufficient Balance ❌");
-        return;
-      }
-
-      await updateDoc(userRef, { balance: balance - amount });
       await deleteDoc(doc(db, "withdraws", id));
-
       loadWithdrawRequests(filter);
-      alert("Withdraw Approved & Balance Deducted ✅");
+      alert("Withdraw Approved ✅");
     };
   }
 
@@ -245,11 +240,18 @@ async function loadWithdrawRequests(filter = "") {
   }
 }
 
-searchDeposit.oninput = e => loadDepositRequests(e.target.value.trim());
-searchWithdraw.oninput = e => loadWithdrawRequests(e.target.value.trim());
+// Search filter
+document.getElementById("searchDeposit").addEventListener("input", e => {
+  loadDepositRequests(e.target.value.trim());
+});
+document.getElementById("searchWithdraw").addEventListener("input", e => {
+  loadWithdrawRequests(e.target.value.trim());
+});
 
+// Initial load
 loadDepositRequests();
 loadWithdrawRequests();
+
 </script>
 
 </body>
