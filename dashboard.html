@@ -389,7 +389,17 @@ body{
   <button class="btn teal-btn" id="openHistory">History</button>
 </div>
 
-<button class="btn green-btn full">WhatsApp Support</button>
+<button class="btn green-btn full" id="whatsappSupport">WhatsApp Support</button>
+
+<script>
+// WhatsApp Support Button
+document.getElementById("whatsappSupport").onclick = function() {
+    const phone = "923008775258"; // 0 ہٹا کر country code لگا دیا (Pakistan = 92)
+    const message = encodeURIComponent("Hello! PowerMax Support Team, how can you help me?");
+    const url = `https://wa.me/${phone}?text=${message}`;
+    window.open(url, "_blank");
+};
+</script>
 <button class="btn red-btn full">Logout</button>
 
 </div>
@@ -743,7 +753,7 @@ document.querySelectorAll(".activate").forEach(btn => {
     }
   };
 });
-   }); // ✅ onAuthStateChanged CLOSED HERE
+}); // ✅ onAuthStateChanged CLOSED HERE
   // ===== DEPOSIT REAL SYSTEM =====
 
 const depositBtn = document.getElementById("depositConfirmBtn");
