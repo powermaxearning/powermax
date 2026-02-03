@@ -654,24 +654,32 @@ document.getElementById("closeWithdraw").onclick = function () {
       if (btn) markButtonActive(btn);
     }
 
-    // 🔘 ACTIVATE CLICK
-    document.querySelectorAll(".activate").forEach(btn => {
-      btn.onclick = async () => {
-        if (data.activePlant) {
-          alert("Your plant is already active.");
-          return;
-        }
+// 🔘 ACTIVATE CLICK (Single Click Safe)
+document.querySelectorAll(".activate").forEach(btn => {
+  btn.onclick = async () => {
 
-        const amount = Number(btn.dataset.amount);
-        if (Number(data.balance) < amount) {
-          alert("Insufficient balance.");
-          return;
-        }
+    if (btn.disabled) return; // ✅ Prevent multiple rapid clicks
 
-        const now = Timestamp.now();
-        const expires = Timestamp.fromMillis(
-          now.toMillis() + PLANT_DURATION_DAYS * 24 * 60 * 60 * 1000
-        );
+    if (data.activePlant) {
+      alert("Your plant is already active.");
+      return;
+    }
+
+    const amount = Number(btn.dataset.amount);
+    if (Number(data.balance) < amount) {
+      alert("Insufficient balance.");
+      return;
+    }
+
+    // Immediately disable button to prevent double clicks
+    btn.disabled = true;
+    btn.innerText = "Processing...";
+
+    try {
+      const now = Timestamp.now();
+      const expires = Timestamp.fromMillis(
+        now.toMillis() + PLANT_DURATION_DAYS * 24 * 60 * 60 * 1000
+      );
 
         // Update user balance & active plant
         await updateDoc(userRef, {
@@ -932,4 +940,4 @@ document.querySelector(".red-btn").addEventListener("click", async () => {
 </script>
 
 </body>
-</html>
+ </html>
