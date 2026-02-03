@@ -558,7 +558,7 @@ document.getElementById("walletSelect").onchange = function () {
 /* COPY NUMBER (REPEATABLE) */
 function copyDepositNumber(){
   const input = document.getElementById("walletNumber");
-  nput.select();
+  input.select();
   input.setSelectionRange(0,99999);
   navigator.clipboard.writeText(input.value);
 }
@@ -654,90 +654,94 @@ document.getElementById("closeWithdraw").onclick = function () {
       if (btn) markButtonActive(btn);
     }
 
-    // 🔘 ACTIVATE CLICK
-    document.querySelectorAll(".activate").forEach(btn => {
-      btn.onclick = async () => {
-        if (data.activePlant) {
-          alert("Your plant is already active.");
-          return;
-        }
+// 🔘 ACTIVATE CLICK (Single Click Safe)
+document.querySelectorAll(".activate").forEach(btn => {
+  btn.onclick = async () => {
 
-        const amount = Number(btn.dataset.amount);
-        if (Number(data.balance) < amount) {
-          alert("Insufficient balance.");
-          return;
-        }
+    if (btn.disabled) return; // ✅ Prevent multiple rapid clicks
 
-        const now = Timestamp.now();
-        const expires = Timestamp.fromMillis(
-          now.toMillis() + PLANT_DURATION_DAYS * 24 * 60 * 60 * 1000
-        );
-
-        // Update user balance & active plant
-        await updateDoc(userRef, {
-          balance: Number(data.balance) - amount,
-          activePlant: {
-            amount,
-            activatedAt: now,
-            expiresAt: expires
-          }
-        });
-
-// ===== REFERRAL TRACK + COMMISSION SYSTEM (WITH ACTIVE PLANT CHECK) =====
-try {
-  if (data.referredBy) {
-    const referrerRef = doc(db, "users", data.referredBy);
-    const refSnap = await getDoc(referrerRef);
-
-    if (refSnap.exists()) {
-      const refData = refSnap.data();
-      const now = Timestamp.now();
-
-      // ✅ Only give commission if referrer's plant is active
-      if (refData.activePlant && refData.activePlant.expiresAt.toMillis() > now.toMillis()) {
-        const commission = Math.floor(amount * 0.90);
-
-        // Update referral count & list
-        await updateDoc(referrerRef, {
-          refCount: (refData.refCount || 0) + 1,
-          referrals: [...(refData.referrals || []), data.uid]
-        });
-
-        // Save commission record
-        await addDoc(collection(db, "commissions"), {
-          fromUser: data.uid,
-          toUser: data.referredBy,
-          amount: commission,
-          plantAmount: amount,
-          createdAt: now,
-          status: "pending"
-        });
-
-        // Update referrer balance
-        const newBalance = (refData.balance || 0) + commission;
-        await updateDoc(referrerRef, { balance: newBalance });
-
-        console.log("Referral + Commission Saved");
-      } else {
-        console.log("Referrer's plant inactive – commission not added");
-      }
+    if (data.activePlant) {
+      alert("Your plant is already active.");
+      return;
     }
-  }
-} catch (err) {
-  console.error("Referral Error:", err);
-  alert("Referral Error: " + err.message);
-}
 
-        // Update local data
-        data.balance = Number(data.balance) - amount;
-        data.activePlant = { amount, expiresAt: expires };
-        document.getElementById("uBalance").innerText = data.balance + " PTS";
-        markButtonActive(btn);
+    const amount = Number(btn.dataset.amount);
+    if (Number(data.balance) < amount) {
+      alert("Insufficient balance.");
+      return;
+    }
 
-        alert("Plant Activated Successfully!");
-      };
-    });
-  });
+    // Immediately disable button to prevent double clicks
+    btn.disabled = true;
+    btn.innerText = "Processing...";
+
+    try {
+      const now = Timestamp.now();
+      const expires = Timestamp.fromMillis(
+        now.toMillis() + PLANT_DURATION_DAYS * 24 * 60 * 60 * 1000
+      );
+
+      // Update user balance & active plant in Firestore
+      await updateDoc(userRef, {
+        balance: Number(data.balance) - amount,
+        activePlant: {
+          amount,
+          activatedAt: now,
+          expiresAt: expires
+        }
+      });
+
+      // REFERRAL TRACK + COMMISSION SYSTEM (WITH ACTIVE PLANT CHECK)
+      try {
+        if (data.referredBy) {
+          const referrerRef = doc(db, "users", data.referredBy);
+          const refSnap = await getDoc(referrerRef);
+
+          if (refSnap.exists()) {
+            const refData = refSnap.data();
+            const nowRef = Timestamp.now();
+
+            if (refData.activePlant && refData.activePlant.expiresAt.toMillis() > nowRef.toMillis()) {
+              const commission = Math.floor(amount * 0.90);
+
+              await updateDoc(referrerRef, {
+                refCount: (refData.refCount || 0) + 1,
+                referrals: [...(refData.referrals || []), data.uid]
+              });
+
+              await addDoc(collection(db, "commissions"), {
+                fromUser: data.uid,
+                toUser: data.referredBy,
+                amount: commission,
+                plantAmount: amount,
+                createdAt: nowRef,
+                status: "pending"
+              });
+
+              const newBalance = (refData.balance || 0) + commission;
+              await updateDoc(referrerRef, { balance: newBalance });
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Referral Error:", err);
+        alert("Referral Error: " + err.message);
+      }
+
+      // Update local data & UI
+      data.balance -= amount;
+      data.activePlant = { amount, expiresAt: expires };
+      document.getElementById("uBalance").innerText = data.balance + " PTS";
+      markButtonActive(btn);
+
+      alert("Plant Activated Successfully!");
+    } catch (err) {
+      alert("Activation Error: " + err.message);
+      btn.disabled = false;        // Re-enable if error
+      btn.innerText = "Activate";
+    }
+  };
+});
   // ===== DEPOSIT REAL SYSTEM =====
 
 const depositBtn = document.getElementById("depositConfirmBtn");
