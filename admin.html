@@ -165,35 +165,51 @@ async function loadWithdraws(){
     const approveBtn = div.querySelector(".approve");
     const rejectBtn  = div.querySelector(".reject");
 
-    // APPROVE → MINUS BALANCE (SAFE)
-    approveBtn.onclick = async ()=>{
-      if(isProcessing) return;
-      isProcessing = true;
+approveBtn.onclick = async ()=>{
+  if(isProcessing) return;
+  isProcessing = true;
 
-      approveBtn.disabled = true;
-      rejectBtn.disabled = true;
-      approveBtn.innerText = "Processing...";
+  approveBtn.disabled = true;
+  rejectBtn.disabled = true;
+  approveBtn.innerText = "Processing...";
 
-      try{
-        const userRef = doc(db,"users",data.uid);
-        const userSnap = await getDoc(userRef);
-        if(!userSnap.exists()) return alert("User not found");
+  try{
+    const userRef = doc(db,"users",data.uid);
+    const userSnap = await getDoc(userRef);
+    if(!userSnap.exists()) return alert("User not found");
 
-        const bal = Number(userSnap.data().balance||0);
-        const amount = Number(data.amount);
+    const bal = Number(userSnap.data().balance || 0);
+    const amount = Number(data.amount);
 
-        if(bal < amount) return alert("Insufficient balance");
+    if(bal < amount) return alert("Insufficient balance");
 
-        await updateDoc(userRef,{ balance: bal - amount });
-        await deleteDoc(doc(db,"withdraws",d.id));
+    // 1️⃣ Update user balance
+    await updateDoc(userRef, { balance: bal - amount });
 
-        loadWithdraws();
-        alert("Withdraw Approved ✅");
-      }catch(e){
-        console.error(e);
-        alert("Error");
-      }
-    };
+    // 2️⃣ Add record to withdrawHistory collection
+    await addDoc(collection(db, "withdrawHistory"), {
+      uid: data.uid,
+      name: data.name,
+      amount: amount,
+      method: data.method,
+      ownerName: data.ownerName,
+      accountNumber: data.accountNumber,
+      status: "success",
+      approvedAt: Timestamp.now(),
+      createdAt: data.createdAt
+    });
+
+    // 3️⃣ Delete original withdraw request
+    await deleteDoc(doc(db,"withdraws",d.id));
+
+    loadWithdraws();
+    alert("Withdraw Approved ✅");
+
+  }catch(e){
+    console.error(e);
+    alert("Error");
+  }
+};
 
     // REJECT (SAFE)
     rejectBtn.onclick = async ()=>{
