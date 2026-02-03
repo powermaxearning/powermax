@@ -613,7 +613,8 @@ document.getElementById("closeWithdraw").onclick = function () {
   function markButtonActive(btn) {
     btn.innerText = "Activated";
     btn.disabled = true;
-    btn.style.background = "#22c55e";
+    btn.style.background = "#ffffff";
+btn.style.color = "#020617"; // تاکہ text واضح نظر آئے
   }
 
   onAuthStateChanged(auth, async (user) => {
