@@ -743,6 +743,10 @@ try {
 const depositBtn = document.getElementById("depositConfirmBtn");
 
 depositBtn.addEventListener("click", async () => {
+  if (depositBtn.disabled) return;  // Prevent multiple clicks
+  depositBtn.disabled = true;       
+  depositBtn.innerText = "Processing..."; // Optional: show user
+
   const amount = document.querySelector("#depositModal select").value;
   const walletType = document.getElementById("walletSelect").value;
   const adminWallet = document.getElementById("walletNumber").value;
@@ -751,17 +755,21 @@ depositBtn.addEventListener("click", async () => {
 
   if (!senderName || !senderNumber) {
     alert("Please fill all fields");
+    depositBtn.disabled = false;
+    depositBtn.innerText = "Confirm Request";
     return;
   }
 
   const user = auth.currentUser;
   if (!user) {
     alert("Login again");
+    depositBtn.disabled = false;
+    depositBtn.innerText = "Confirm Request";
     return;
   }
 
   try {
-    // 👀 24-hour deposit check
+    // 24-hour deposit check
     const lastDepositQuery = await getDoc(doc(db, "users", user.uid));
     const lastDepositData = lastDepositQuery.data();
     if (lastDepositData.lastDepositAt) {
@@ -769,6 +777,8 @@ depositBtn.addEventListener("click", async () => {
       const now = Date.now();
       if (now - lastTime < 24 * 60 * 60 * 1000) {
         alert("❌ You can only deposit once every 24 hours.");
+        depositBtn.disabled = false;
+        depositBtn.innerText = "Confirm Request";
         return;
       }
     }
@@ -802,6 +812,9 @@ depositBtn.addEventListener("click", async () => {
 
   } catch (err) {
     alert("❌ Deposit Error: " + err.message);
+  } finally {
+    depositBtn.disabled = false;
+    depositBtn.innerText = "Confirm Request";
   }
 });
 </script>
@@ -825,6 +838,10 @@ const db = getFirestore();
 const withdrawBtn = document.querySelector("#withdrawModal .confirm-btn");
 
 withdrawBtn.addEventListener("click", async () => {
+  if (withdrawBtn.disabled) return;  
+  withdrawBtn.disabled = true;       
+  withdrawBtn.innerText = "Processing...";
+
   const amount = document.querySelector('#withdrawModal input[type="number"]').value;
   const method = document.querySelector('#withdrawModal select').value;
   const ownerName = document.querySelectorAll('#withdrawModal input[type="text"]')[0].value.trim();
@@ -832,17 +849,21 @@ withdrawBtn.addEventListener("click", async () => {
 
   if (!amount || amount < 10 || !ownerName || !accountNumber) {
     alert("❌ Please fill all fields (Min 10 PTS)");
+    withdrawBtn.disabled = false;
+    withdrawBtn.innerText = "Request Withdraw";
     return;
   }
 
   const user = auth.currentUser;
   if (!user) {
     alert("Login required");
+    withdrawBtn.disabled = false;
+    withdrawBtn.innerText = "Request Withdraw";
     return;
   }
 
   try {
-    // 👀 24-hour withdraw check
+    // 24-hour withdraw check
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
     const userData = userSnap.data();
@@ -852,6 +873,8 @@ withdrawBtn.addEventListener("click", async () => {
       const now = Date.now();
       if (now - lastTime < 24 * 60 * 60 * 1000) {
         alert("❌ You can only withdraw once every 24 hours.");
+        withdrawBtn.disabled = false;
+        withdrawBtn.innerText = "Request Withdraw";
         return;
       }
     }
@@ -883,6 +906,9 @@ withdrawBtn.addEventListener("click", async () => {
 
   } catch (err) {
     alert("❌ Withdraw Error: " + err.message);
+  } finally {
+    withdrawBtn.disabled = false;
+    withdrawBtn.innerText = "Request Withdraw";
   }
 });
 </script>
