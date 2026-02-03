@@ -558,8 +558,8 @@ document.getElementById("walletSelect").onchange = function () {
 /* COPY NUMBER (REPEATABLE) */
 function copyDepositNumber(){
   const input = document.getElementById("walletNumber");
-  input.select();
-  input.setSelectionRange(0, 99999);
+  nput.select();
+  input.setSelectionRange(0,99999);
   navigator.clipboard.writeText(input.value);
 }
 
@@ -572,73 +572,19 @@ document.querySelector(".orange-btn").onclick = function () {
 document.getElementById("closeWithdraw").onclick = function () {
   document.getElementById("withdrawModal").style.display = "none";
 };
-/* OPEN HISTORY */
-document.getElementById("openHistory").onclick = function () {
-  document.getElementById("historyModal").style.display = "flex";
-  loadWithdrawHistory();
-};
-
-/* CLOSE HISTORY */
-document.getElementById("closeHistory").onclick = function () {
-  document.getElementById("historyModal").style.display = "none";
-};
-window.loadWithdrawHistory = function () {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const box = document.getElementById("historyContent");
-  box.innerHTML = "Loading...";
-
-  const q = query(
-    collection(db, "withdrawHistory"),
-    where("uid", "==", user.uid),
-    orderBy("approvedAt", "desc")
-  );
-
-  if (historyUnsub) historyUnsub();
-
-  historyUnsub = onSnapshot(q, (snap) => {
-    box.innerHTML = "";
-
-    if (snap.empty) {
-      box.innerHTML = "<p>No successful withdrawals</p>";
-      return;
-    }
-
-    snap.forEach(d => {
-      const data = d.data();
-      const date = data.approvedAt?.toDate().toLocaleString() || "";
-
-      box.innerHTML += `
-        <div style="border-bottom:1px solid #ddd;padding:8px 0;display:flex;justify-content:space-between;">
-          <div>
-            <b>${data.amount} PTS</b><br>
-            <small>${date}</small>
-          </div>
-          <span style="color:green;font-weight:700;">Withdrawal Successful</span>
-        </div>
-      `;
-    });
-  });
-};
 </script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  Timestamp,
-  addDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  orderBy,
-  onSnapshot
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    updateDoc,
+    Timestamp,
+    addDoc,
+    collection
   } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -653,49 +599,6 @@ import {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  window.auth = auth;
-window.db = db;
-let historyUnsub = null;
-
-window.loadWithdrawHistory = function () {
-  const user = auth.currentUser;
-  if (!user) return;
-
-  const box = document.getElementById("historyContent");
-  box.innerHTML = "Loading...";
-
-  const q = query(
-  collection(db, "withdraws"),
-  where("uid", "==", user.uid),
-  where("status", "in", ["success", "approved"]) // admin jo bhi use kare
-);
-
-  if (historyUnsub) historyUnsub();
-
-  historyUnsub = onSnapshot(q, (snap) => {
-    box.innerHTML = "";
-
-    if (snap.empty) {
-      box.innerHTML = "<p>No successful withdrawals</p>";
-      return;
-    }
-
-    snap.forEach(d => {
-      const data = d.data();
-      const date = data.createdAt?.toDate().toLocaleString() || "";
-
-      box.innerHTML += `
-        <div style="border-bottom:1px solid #ddd;padding:8px 0;display:flex;justify-content:space-between;">
-          <div>
-            <b>${data.amount} PTS</b><br>
-            <small>${date}</small>
-          </div>
-          <span style="color:green;font-weight:700;">Withdrawal Successful</span>
-        </div>
-      `;
-    });
-  });
-};
 
   const PLANT_DURATION_DAYS = 15;
 
