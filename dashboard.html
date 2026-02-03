@@ -649,10 +649,10 @@ window.loadWithdrawHistory = function () {
   box.innerHTML = "Loading...";
 
   const q = query(
-    collection(db, "withdraws"),
-    where("uid", "==", user.uid),
-    where("status", "==", "success")
-  );
+  collection(db, "withdraws"),
+  where("uid", "==", user.uid),
+  where("status", "in", ["success", "approved"]) // admin jo bhi use kare
+);
 
   if (historyUnsub) historyUnsub();
 
