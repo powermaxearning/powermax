@@ -377,6 +377,171 @@ body{
   </div>
   <button class="activate" data-amount="5000">Activate</button>
 </div>
+ <!-- ===== COMPLETE SPIN WHEEL SECTION ===== -->
+<div id="wheelContainer">
+  <canvas id="wheel" width="300" height="300"></canvas>
+  <div style="margin-top:10px; text-align:center;">
+    <button id="spinBtn">Spin Now</button>
+  </div>
+</div>
+
+<style>
+/* ===== SPIN WHEEL STYLES ===== */
+#wheelContainer {
+  margin-top: 20px;
+  text-align: center;
+  position: relative;
+}
+
+#wheel {
+  border-radius: 50%;
+  border: 6px solid #38bdf8;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+#spinBtn {
+  margin-top: 15px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 18px;
+  background: linear-gradient(135deg,#22c55e,#16a34a);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* POINTER INDICATOR */
+#wheelPointer {
+  width: 0; 
+  height: 0; 
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-bottom: 30px solid #f43f5e;
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+</style>
+
+<div id="wheelPointer"></div>
+
+<script>
+// ===== SPIN WHEEL LOGIC =====
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const spinBtn = document.getElementById("spinBtn");
+
+// Wheel segments
+const segments = [
+  { label: "0 PTS", color: "#16a34a", value: 0 },
+  { label: "10 PTS", color: "#ca8a04", value: 10 },
+  { label: "30 PTS", color: "#7c3aed", value: 30 },
+  { label: "50 PTS", color: "#0284c7", value: 50 },
+  { label: "70 PTS", color: "#6d28d9", value: 70 },
+  { label: "90 PTS", color: "#be185d", value: 90 },
+  { label: "120 PTS", color: "#0f766e", value: 120 },
+  { label: "150 PTS", color: "#334155", value: 150 }
+];
+
+const numSegments = segments.length;
+const arc = 2 * Math.PI / numSegments;
+
+let startAngle = 0;
+let spinning = false;
+
+function drawWheel() {
+  const radius = canvas.width / 2;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(radius, radius);
+
+  for (let i = 0; i < numSegments; i++) {
+    const seg = segments[i];
+
+    // Draw segment
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.arc(0,0,radius,startAngle + i*arc, startAngle + (i+1)*arc);
+    ctx.closePath();
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Draw text
+    ctx.save();
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 14px sans-serif";
+    ctx.translate(
+      radius * 0.65 * Math.cos(startAngle + i*arc + arc/2),
+      radius * 0.65 * Math.sin(startAngle + i*arc + arc/2)
+    );
+    ctx.rotate(startAngle + i*arc + arc/2 + Math.PI/2);
+    ctx.textAlign = "center";
+    ctx.fillText(seg.label, 0, 0);
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+drawWheel();
+
+spinBtn.addEventListener("click", async () => {
+  if (spinning) return;
+  spinning = true;
+  spinBtn.disabled = true;
+
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Login required!");
+    spinning = false;
+    spinBtn.disabled = false;
+    return;
+  }
+
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+  const data = snap.data();
+  let userBalance = Number(data.balance || 0);
+
+  // Random reward
+  const rewardIndex = Math.floor(Math.random() * segments.length);
+  const reward = segments[rewardIndex].value;
+
+  // Rotation calculation
+  const spins = 5; // full spins
+  const rotation = spins * 2 * Math.PI + rewardIndex * arc + arc/2;
+
+  let currentRotation = 0;
+  const step = rotation / 100;
+  let count = 0;
+
+  const spinAnim = setInterval(() => {
+    currentRotation += step;
+    startAngle += step;
+    drawWheel();
+    count++;
+    if (count >= 100) {
+      clearInterval(spinAnim);
+
+      // Update balance in Firestore
+      updateDoc(userRef, { balance: userBalance + reward }).then(() => {
+        document.getElementById("uBalance").innerText = (userBalance + reward) + " PTS";
+        alert(`🎉 Congratulations! You won ${reward} PTS!`);
+        spinning = false;
+        spinBtn.disabled = false;
+      }).catch(err => {
+        alert("Error updating balance: " + err.message);
+        spinning = false;
+        spinBtn.disabled = false;
+      });
+    }
+  }, 40);
+});
+</script>
 
 <!-- ACTION BUTTONS -->
 <div class="btn-row">
@@ -945,171 +1110,7 @@ document.querySelector(".red-btn").addEventListener("click", async () => {
     alert("Logout Error: " + e.message);
   }
 });
- <!-- ===== COMPLETE SPIN WHEEL SECTION ===== -->
-<div id="wheelContainer">
-  <canvas id="wheel" width="300" height="300"></canvas>
-  <div style="margin-top:10px; text-align:center;">
-    <button id="spinBtn">Spin Now</button>
-  </div>
-</div>
-
-<style>
-/* ===== SPIN WHEEL STYLES ===== */
-#wheelContainer {
-  margin-top: 20px;
-  text-align: center;
-  position: relative;
-}
-
-#wheel {
-  border-radius: 50%;
-  border: 6px solid #38bdf8;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-
-#spinBtn {
-  margin-top: 15px;
-  padding: 12px 28px;
-  border: none;
-  border-radius: 18px;
-  background: linear-gradient(135deg,#22c55e,#16a34a);
-  color: #fff;
-  font-weight: 700;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-/* POINTER INDICATOR */
-#wheelPointer {
-  width: 0; 
-  height: 0; 
-  border-left: 15px solid transparent;
-  border-right: 15px solid transparent;
-  border-bottom: 30px solid #f43f5e;
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-</style>
-
-<div id="wheelPointer"></div>
-
-<script>
-// ===== SPIN WHEEL LOGIC =====
-const canvas = document.getElementById("wheel");
-const ctx = canvas.getContext("2d");
-const spinBtn = document.getElementById("spinBtn");
-
-// Wheel segments
-const segments = [
-  { label: "0 PTS", color: "#16a34a", value: 0 },
-  { label: "10 PTS", color: "#ca8a04", value: 10 },
-  { label: "30 PTS", color: "#7c3aed", value: 30 },
-  { label: "50 PTS", color: "#0284c7", value: 50 },
-  { label: "70 PTS", color: "#6d28d9", value: 70 },
-  { label: "90 PTS", color: "#be185d", value: 90 },
-  { label: "120 PTS", color: "#0f766e", value: 120 },
-  { label: "150 PTS", color: "#334155", value: 150 }
-];
-
-const numSegments = segments.length;
-const arc = 2 * Math.PI / numSegments;
-
-let startAngle = 0;
-let spinning = false;
-
-function drawWheel() {
-  const radius = canvas.width / 2;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-  ctx.translate(radius, radius);
-
-  for (let i = 0; i < numSegments; i++) {
-    const seg = segments[i];
-
-    // Draw segment
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.arc(0,0,radius,startAngle + i*arc, startAngle + (i+1)*arc);
-    ctx.closePath();
-    ctx.fillStyle = seg.color;
-    ctx.fill();
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Draw text
-    ctx.save();
-    ctx.fillStyle = "#fff";
-    ctx.font = "bold 14px sans-serif";
-    ctx.translate(
-      radius * 0.65 * Math.cos(startAngle + i*arc + arc/2),
-      radius * 0.65 * Math.sin(startAngle + i*arc + arc/2)
-    );
-    ctx.rotate(startAngle + i*arc + arc/2 + Math.PI/2);
-    ctx.textAlign = "center";
-    ctx.fillText(seg.label, 0, 0);
-    ctx.restore();
-  }
-  ctx.restore();
-}
-
-drawWheel();
-
-spinBtn.addEventListener("click", async () => {
-  if (spinning) return;
-  spinning = true;
-  spinBtn.disabled = true;
-
-  const user = auth.currentUser;
-  if (!user) {
-    alert("Login required!");
-    spinning = false;
-    spinBtn.disabled = false;
-    return;
-  }
-
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
-  const data = snap.data();
-  let userBalance = Number(data.balance || 0);
-
-  // Random reward
-  const rewardIndex = Math.floor(Math.random() * segments.length);
-  const reward = segments[rewardIndex].value;
-
-  // Rotation calculation
-  const spins = 5; // full spins
-  const rotation = spins * 2 * Math.PI + rewardIndex * arc + arc/2;
-
-  let currentRotation = 0;
-  const step = rotation / 100;
-  let count = 0;
-
-  const spinAnim = setInterval(() => {
-    currentRotation += step;
-    startAngle += step;
-    drawWheel();
-    count++;
-    if (count >= 100) {
-      clearInterval(spinAnim);
-
-      // Update balance in Firestore
-      updateDoc(userRef, { balance: userBalance + reward }).then(() => {
-        document.getElementById("uBalance").innerText = (userBalance + reward) + " PTS";
-        alert(`🎉 Congratulations! You won ${reward} PTS!`);
-        spinning = false;
-        spinBtn.disabled = false;
-      }).catch(err => {
-        alert("Error updating balance: " + err.message);
-        spinning = false;
-        spinBtn.disabled = false;
-      });
-    }
-  }, 40);
-});
 </script>
 
 </body>
-     </html>
+ </html>
