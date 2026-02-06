@@ -377,6 +377,137 @@ body{
   </div>
   <button class="activate" data-amount="5000">Activate</button>
 </div>
+<!-- ===== SPIN WHEEL SECTION ===== -->
+<div class="spin-wheel-container" style="margin-top:20px; text-align:center;">
+  <h3 style="color:#facc15; margin-bottom:10px;">🎡 Daily Spin Wheel 🎡</h3>
+  <canvas id="spinWheel" width="300" height="300" style="border-radius:50%; margin-bottom:10px;"></canvas>
+  <button id="spinBtn" class="btn orange-btn full">Spin Now!</button>
+  <p id="spinMessage" style="margin-top:8px; font-size:14px; color:#38bdf8;"></p>
+</div>
+
+<script>
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const auth = getAuth();
+const db = getFirestore();
+
+const spinWheel = document.getElementById("spinWheel");
+const spinBtn = document.getElementById("spinBtn");
+const spinMsg = document.getElementById("spinMessage");
+
+const ctx = spinWheel.getContext("2d");
+const wheelRadius = 150;
+const slices = [
+  { color: "#f87171", points: 10 },
+  { color: "#60a5fa", points: 20 },
+  { color: "#34d399", points: 30 },
+  { color: "#facc15", points: 50 },
+  { color: "#a78bfa", points: 100 },
+  { color: "#f472b6", points: 200 },
+  { color: "#fb923c", points: 500 },
+  { color: "#3b82f6", points: 1000 }
+];
+const sliceCount = slices.length;
+const sliceAngle = (2 * Math.PI) / sliceCount;
+
+// DRAW WHEEL
+function drawWheel() {
+  for (let i = 0; i < sliceCount; i++) {
+    ctx.beginPath();
+    ctx.moveTo(wheelRadius, wheelRadius);
+    ctx.arc(
+      wheelRadius,
+      wheelRadius,
+      wheelRadius,
+      sliceAngle * i,
+      sliceAngle * (i + 1)
+    );
+    ctx.fillStyle = slices[i].color;
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Text
+    ctx.save();
+    ctx.translate(wheelRadius, wheelRadius);
+    ctx.rotate(sliceAngle * i + sliceAngle / 2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillText(slices[i].points + " PTS", wheelRadius - 10, 5);
+    ctx.restore();
+  }
+}
+drawWheel();
+
+// SPIN LOGIC
+let spinning = false;
+let spinCount = 0;
+
+spinBtn.onclick = async () => {
+  if (spinning) return;
+  spinning = true;
+
+  const user = auth.currentUser;
+  if (!user) {
+    alert("Login required");
+    spinning = false;
+    return;
+  }
+
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+  const data = snap.data();
+
+  // DAILY LIMIT 5 SPINS
+  const today = new Date().toDateString();
+  if (!data.spinHistory) data.spinHistory = {};
+  if (!data.spinHistory[today]) data.spinHistory[today] = 0;
+
+  if (data.spinHistory[today] >= 5) {
+    alert("✅ You have reached your 5 spins limit for today!");
+    spinning = false;
+    return;
+  }
+
+  // RANDOM SLICE
+  const sliceIndex = Math.floor(Math.random() * sliceCount);
+  const reward = slices[sliceIndex].points;
+
+  // ANIMATION
+  let rotation = 0;
+  const spins = Math.floor(Math.random() * 5 + 5); // 5-10 spins
+  const finalRotation = spins * 2 * Math.PI + sliceIndex * sliceAngle + sliceAngle / 2;
+
+  const animate = () => {
+    rotation += (finalRotation - rotation) * 0.1;
+    ctx.clearRect(0, 0, spinWheel.width, spinWheel.height);
+    ctx.save();
+    ctx.translate(wheelRadius, wheelRadius);
+    ctx.rotate(rotation);
+    ctx.translate(-wheelRadius, -wheelRadius);
+    drawWheel();
+    ctx.restore();
+
+    if (Math.abs(rotation - finalRotation) > 0.01) {
+      requestAnimationFrame(animate);
+    } else {
+      // FINISHED
+      spinMsg.innerText = `🎉 You won ${reward} PTS!`;
+      // UPDATE FIRESTORE
+      updateDoc(userRef, {
+        balance: (data.balance || 0) + reward,
+        [`spinHistory.${today}`]: (data.spinHistory[today] || 0) + 1
+      });
+      document.getElementById("uBalance").innerText = ((data.balance || 0) + reward) + " PTS";
+      spinning = false;
+    }
+  };
+  animate();
+};
+</script>
 
 <!-- ACTION BUTTONS -->
 <div class="btn-row">
@@ -948,4 +1079,4 @@ document.querySelector(".red-btn").addEventListener("click", async () => {
 </script>
 
 </body>
- </html>
+     </html>
