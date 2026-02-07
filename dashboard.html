@@ -297,6 +297,51 @@ body{
   border-radius:14px;
   font-weight:800;
 }
+/* ================= SPIN WHEEL STYLE ================= */
+.spin-card{
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:18px;
+  padding:16px;
+  text-align:center;
+  margin-top:20px;
+}
+
+.wheel-container{
+  width:220px;
+  height:220px;
+  border-radius:50%;
+  margin:12px auto;
+  border:6px solid #38bdf8;
+  overflow:hidden;
+  position:relative;
+}
+
+#wheel{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  background:conic-gradient(
+    #22c55e 0deg 60deg,
+    #facc15 60deg 120deg,
+    #fb7185 120deg 180deg,
+    #38bdf8 180deg 240deg,
+    #a855f7 240deg 300deg,
+    #f97316 300deg 360deg
+  );
+  transition:transform 4s ease-out;
+}
+
+#spinBtn{
+  background:#22c55e;
+  border:none;
+  padding:12px 22px;
+  border-radius:14px;
+  font-weight:800;
+  font-size:16px;
+  margin-top:12px;
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -376,6 +421,17 @@ body{
     <p>Commission 90%</p>
   </div>
   <button class="activate" data-amount="5000">Activate</button>
+</div>
+<!-- 🎡 SPIN WHEEL BOX -->
+<div class="spin-card">
+  <h3>🎁 Daily Spin Wheel</h3>
+  <p>Free Spins Today: <span id="spinsLeft">5</span></p>
+
+  <div class="wheel-container">
+    <div id="wheel"></div>
+  </div>
+
+  <button id="spinBtn">🎡 SPIN NOW</button>
 </div>
 
 <!-- ACTION BUTTONS -->
@@ -946,6 +1002,83 @@ document.querySelector(".red-btn").addEventListener("click", async () => {
   }
 });
 </script>
+<script type="module">
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const auth = getAuth();
+const db = getFirestore();
+
+let spins = 5;
+let spinning = false;
+
+const spinBtn = document.getElementById("spinBtn");
+const wheel = document.getElementById("wheel");
+const spinsLeft = document.getElementById("spinsLeft");
+
+// Rewards
+const rewards = [5,10,20,30,50,100];
+
+// Load Spins From Firebase
+async function loadSpins(){
+  const user = auth.currentUser;
+  if(!user) return;
+
+  const ref = doc(db,"users",user.uid);
+  const snap = await getDoc(ref);
+  const data = snap.data();
+
+  const today = new Date().toDateString();
+
+  if(data.lastSpinDate !== today){
+    await updateDoc(ref,{ spinsLeft:5, lastSpinDate:today });
+    spins = 5;
+  } else {
+    spins = data.spinsLeft || 0;
+  }
+
+  spinsLeft.innerText = spins;
+}
+
+// Spin Button
+spinBtn.onclick = async () => {
+  if(spinning) return;
+  if(spins <= 0){
+    alert("❌ No spins left today");
+    return;
+  }
+
+  spinning = true;
+  spins--;
+
+  const deg = 3600 + Math.random()*360;
+  wheel.style.transform = `rotate(${deg}deg)`;
+
+  setTimeout(async () => {
+    const reward = rewards[Math.floor(Math.random()*rewards.length)];
+
+    alert("🎉 Congratulations! You won " + reward + " PTS");
+
+    const user = auth.currentUser;
+    const ref = doc(db,"users",user.uid);
+    const snap = await getDoc(ref);
+    const data = snap.data();
+
+    await updateDoc(ref,{
+      balance: (data.balance || 0) + reward,
+      spinsLeft: spins
+    });
+
+    document.getElementById("uBalance").innerText = (data.balance + reward) + " PTS";
+    spinsLeft.innerText = spins;
+
+    spinning = false;
+  },4000);
+};
+
+// Load spins after login
+setTimeout(loadSpins,2000);
+</script>
 
 </body>
- </html>
+     </html>
