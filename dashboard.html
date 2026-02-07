@@ -377,33 +377,6 @@ body{
   </div>
   <button class="activate" data-amount="5000">Activate</button>
 </div>
-<!-- ===== SPIN BUTTON ===== -->
-<button class="btn purple-btn full" id="openSpin">
-🎡 Daily Spin
-</button>
-
-<!-- ===== SPIN MODAL ===== -->
-<div id="spinModal" class="dep-modal">
-  <div class="dep-box" style="text-align:center">
-
-    <h3 class="dep-title">🎡 Spin & Win</h3>
-
-    <canvas id="wheelCanvas" width="260" height="260"></canvas>
-
-    <p style="margin-top:10px">
-      Spins Left: <b id="spinsLeft">0</b>
-    </p>
-
-    <button class="confirm-btn" id="spinBtn">
-      SPIN
-    </button>
-
-    <button id="closeSpin" class="cancel-btn">
-      Close
-    </button>
-
-  </div>
-</div>
 
 <!-- ACTION BUTTONS -->
 <div class="btn-row">
@@ -549,13 +522,6 @@ document.getElementById("whatsappSupport").onclick = function() {
   </div>
 </div>
 <script>
-document.getElementById("openSpin").onclick = () =>
-  document.getElementById("spinModal").style.display="flex";
-
-document.getElementById("closeSpin").onclick = () =>
-  document.getElementById("spinModal").style.display="none";
-</script>
-<script>
 document.getElementById("openReferral").onclick = function () {
   document.getElementById("referralModal").style.display = "flex";
 };
@@ -647,47 +613,6 @@ document.getElementById("closeWithdraw").onclick = function () {
   const PLANT_DURATION_DAYS = 15;
 
   function resetAllButtons() {
-
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  Timestamp
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const auth = getAuth();
-const db = getFirestore();
-
-const canvas = document.getElementById("wheelCanvas");
-const ctx = canvas.getContext("2d");
-
-const segments = [50,80,100,120,150]; // total possible rewards
-const colors = ["#22c55e","#38bdf8","#facc15","#fb923c","#a855f7"];
-
-let angle = 0;
-
-function drawWheel(){
-  const arc = Math.PI*2 / segments.length;
-
-  for(let i=0;i<segments.length;i++){
-    ctx.beginPath();
-    ctx.fillStyle = colors[i];
-    ctx.moveTo(130,130);
-    ctx.arc(130,130,130, i*arc+angle, (i+1)*arc+angle);
-    ctx.fill();
-
-    ctx.fillStyle="#000";
-    ctx.font="bold 14px sans-serif";
-    ctx.save();
-    ctx.translate(130,130);
-    ctx.rotate(i*arc + arc/2 + angle);
-    ctx.fillText(segments[i]+" pts",60,5);
-    ctx.restore();
-  }
-}
-drawWheel();
     document.querySelectorAll(".activate").forEach(btn => {
       btn.innerText = "Activate";
       btn.disabled = false;
@@ -703,72 +628,6 @@ btn.style.color = "#020617"; // تاکہ text واضح نظر آئے
   }
 
   onAuthStateChanged(auth, async (user) => {
-    document.getElementById("spinBtn").onclick = async ()=>{
-
-  const user = auth.currentUser;
-  if(!user) return alert("Login again");
-
-  const ref = doc(db,"users",user.uid);
-  const snap = await getDoc(ref);
-  const data = snap.data();
-
-  // ===== Daily Reset =====
-  const today = new Date().toDateString();
-
-  if(data.spinDay !== today){
-    await updateDoc(ref,{
-      spinDay: today,
-      spinsUsed:0,
-      spinEarn:0
-    });
-    data.spinsUsed=0;
-    data.spinEarn=0;
-  }
-
-  if(data.spinsUsed >=5)
-    return alert("No spins left today");
-
-  if(data.spinEarn >=500)
-    return alert("Daily limit reached");
-
-  // ===== SHOW AD PLACEHOLDER =====
-  alert("Show Ad Here"); // <- attach ad SDK
-
-  // ===== SPIN FAST =====
-  const reward = segments[Math.floor(Math.random()*segments.length)];
-  const extra = Math.random()*360 + 1440;
-  const target = angle + extra * Math.PI/180;
-
-  const start = Date.now();
-
-  function animate(){
-    const progress=(Date.now()-start)/2000;
-
-    if(progress<1){
-      angle += (target-angle)*0.2;
-      ctx.clearRect(0,0,260,260);
-      drawWheel();
-      requestAnimationFrame(animate);
-    }else{
-
-      const finalReward =
-        Math.min(reward, 500 - data.spinEarn);
-
-      await updateDoc(ref,{
-        balance:data.balance + finalReward,
-        spinsUsed:data.spinsUsed+1,
-        spinEarn:data.spinEarn + finalReward
-      });
-
-      document.getElementById("uBalance").innerText =
-        (data.balance+finalReward)+" PTS";
-
-      alert("You won "+finalReward+" pts 🎉");
-    }
-  }
-  animate();
-};
-</script>
     if (!user) {
       window.location.href = "index.html";
       return;
