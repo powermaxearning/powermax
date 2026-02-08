@@ -63,7 +63,7 @@ small{color:#94a3b8;font-size:12px}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
@@ -91,19 +91,26 @@ const baseUrl = "https://powermaxearning.github.io/powermax/";
 // LOAD USER DATA
 async function loadUser(){
   const snap = await getDoc(userRef);
-  const data = snap.data();
+  const data = snap.data() || {};
 
   balance = data.balance || 0;
   spins = data.spins || 5;
+  todayPoints = data.todayPoints || 0;
 
-  // DAILY RESET
-  let last = data.lastReset || 0;
-  let today = new Date().toDateString();
-  let lastDay = new Date(last).toDateString();
+  // ✅ 24 HOURS RESET SYSTEM (FIXED)
+  let lastReset = data.lastReset || 0;
+  let now = Date.now();
+  let hours24 = 24 * 60 * 60 * 1000;
 
-  if(today !== lastDay){
+  if(now - lastReset >= hours24){
     spins = 5;
-    await updateDoc(userRef,{spins:5,lastReset:Date.now()});
+    todayPoints = 0;
+
+    await updateDoc(userRef,{
+      spins:5,
+      todayPoints:0,
+      lastReset: now
+    });
   }
 
   document.getElementById("balance").innerText = balance;
@@ -131,13 +138,18 @@ document.getElementById("spinBtn").onclick = async ()=>{
   let rewards = [20,50,80,100];
   let reward = rewards[Math.floor(Math.random()*rewards.length)];
 
-  // Daily max limit
+  // Daily max limit 500 points
   if(todayPoints + reward > MAX_POINTS){
     reward = MAX_POINTS - todayPoints;
+    if(reward <= 0){
+      alert("Daily limit reached!");
+      return;
+    }
   }
-  todayPoints += reward;
 
+  todayPoints += reward;
   spins--;
+
   document.getElementById("spins").innerText = spins;
   document.getElementById("spinSound").play();
 
@@ -146,7 +158,13 @@ document.getElementById("spinBtn").onclick = async ()=>{
 
   setTimeout(async ()=>{
     balance += reward;
-    await updateDoc(userRef,{balance,spins});
+
+    await updateDoc(userRef,{
+      balance,
+      spins,
+      todayPoints
+    });
+
     document.getElementById("balance").innerText = balance;
     alert("🎉 You got "+reward+" points!");
   },5000);
