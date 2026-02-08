@@ -1,1084 +1,138 @@
- <!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-<meta charset="UTF-8">
-<title>PowerMax Dashboard</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<title>Spin Dashboard</title>
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-}
-
-/* ===== BODY ===== */
 body{
-  background:linear-gradient(180deg,#020617,#0b1224,#020617);
-  color:#f8fafc;
-}
-
-/* ===== CONTAINER ===== */
-.container{
-  max-width:420px;
-  margin:auto;
-  padding:20px 14px 40px;
-}
-
-/* ===== TITLE ===== */
-.dash-title{
+  font-family: Arial;
+  background:#0f172a;
+  color:white;
   text-align:center;
-  font-size:24px;
-  font-weight:800;
-  color:#38bdf8;
-  margin-bottom:16px;
 }
-
-/* ===== USER CARD ===== */
-.user-card{
-  background:rgba(255,255,255,0.07);
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:18px;
-  padding:16px;
-  text-align:center;
-  margin-bottom:18px;
-}
-
-.user-card p{
-  margin:6px 0;
-  font-size:14px;
-  color:#e5e7eb;
-}
-
-/* ===== PLANT CARD ===== */
-.plant{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:16px;
-  border-radius:16px;
-  margin-bottom:12px;
-}
-
-.plant h3{
-  font-size:16px;
-  font-weight:700;
-  margin-bottom:4px;
-}
-
-.plant p{
-  font-size:13px;
-  opacity:0.9;
-}
-
-/* ===== ACTIVATE BUTTON ===== */
-.activate{
-  background:rgba(255,255,255,0.25);
-  border:none;
-  padding:8px 16px;
-  border-radius:20px;
-  font-size:13px;
-  font-weight:700;
-  cursor:pointer;
-}
-
-/* ===== PLANT COLORS ===== */
-.green{background:linear-gradient(135deg,#16a34a,#22c55e);}
-.yellow{background:linear-gradient(135deg,#ca8a04,#facc15);}
-.purple{background:linear-gradient(135deg,#7c3aed,#a855f7);}
-.blue{background:linear-gradient(135deg,#0284c7,#38bdf8);}
-.lavender{background:linear-gradient(135deg,#6d28d9,#c084fc);}
-.pink{background:linear-gradient(135deg,#be185d,#f472b6);}
-.mint{background:linear-gradient(135deg,#0f766e,#2dd4bf);}
-.gray{background:linear-gradient(135deg,#334155,#64748b);}
-
-/* ===== BUTTON ROW ===== */
-.btn-row{
-  display:flex;
-  gap:12px;
-  margin-top:14px;
-}
-
-/* ===== BUTTON ===== */
-.btn{
-  flex:1;
-  padding:14px;
-  border-radius:16px;
-  border:none;
-  font-size:15px;
-  font-weight:700;
-  cursor:pointer;
-}
-
-/* ===== BUTTON COLORS ===== */
-.purple-btn{background:#a855f7;color:#fff;}
-.teal-btn{background:#2dd4bf;color:#020617;}
-.orange-btn{background:#fb923c;color:#020617;}
-.green-btn{background:#22c55e;color:#020617;}
-.red-btn{background:#f43f5e;color:#fff;}
-
-/* ===== FULL ===== */
-.full{
-  width:100%;
-  margin-top:12px;
-}
-/* ===== REFERRAL MODAL ===== */
-.ref-modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.6);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:999;
-}
-
-.ref-box{
-  background:#ffffff;
-  width:92%;
-  max-width:380px;
-  border-radius:18px;
-  padding:20px;
-  color:#020617;
-}
-
-.ref-title{
-  font-size:18px;
-  font-weight:800;
-  color:#2563eb;
-}
-
-.ref-sub{
-  font-size:13px;
-  margin:6px 0 12px;
-  color:#475569;
-}
-
-.ref-label{
-  font-size:13px;
-  font-weight:700;
-}
-
-.ref-link{
-  display:flex;
-  gap:8px;
-  margin:8px 0 14px;
-}
-
-.ref-link input{
-  flex:1;
-  padding:8px;
+.card{
+  background:#111827;
+  padding:15px;
+  margin:10px;
   border-radius:10px;
-  border:1px solid #cbd5f5;
 }
-
-.copy-btn{
-  background:#22c55e;
-  border:none;
-  color:#fff;
-  padding:8px 14px;
-  border-radius:10px;
-  font-weight:700;
-}
-
-.level{
-  margin-top:12px;
-  font-size:14px;
-}
-
-.l1{color:#16a34a;}
-.l2{color:#dc2626;}
-
-.level-box{
-  background:#ecfdf5;
-  border-radius:12px;
-  padding:14px;
-  text-align:center;
-  font-size:13px;
-  margin-top:6px;
-}
-
-.close-ref{
-  margin-top:16px;
-  width:100%;
-  padding:12px;
-  border-radius:14px;
-  border:2px solid #64748b;
-  background:#fff;
-  font-weight:700;
-}
-/* ===== DEPOSIT MODAL ===== */
-.dep-modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.6);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:999;
-}
-.status-btn {
-  background: #2563eb; /* نیلا بٹن */
-  color: #fff;
-  border: none;
-  padding: 8px 16px; /* مناسب سائز */
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-bottom: 12px; /* Deposit Chips کے اوپر جگہ */
-  display: inline-block;
-}
-.dep-box{
-  background:#ffffff;
-  width:92%;
-  max-width:380px;
-  border-radius:18px;
-  padding:20px;
-  color:#020617;
-}
-
-.dep-title{
-  font-size:18px;
-  font-weight:800;
-  color:#2563eb;
-  margin-bottom:10px;
-}
-
-.dep-field{
-  margin-bottom:12px;
-}
-
-.dep-field label{
-  font-size:13px;
-  font-weight:700;
-}
-
-.dep-field select,
-.dep-field input{
-  width:100%;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid #cbd5f5;
-  margin-top:6px;
-}
-
-.wallet-row{
-  display:flex;
-  gap:8px;
-}
-
-.wallet-row input{
-  flex:1;
-}
-
-.dep-actions{
-  display:flex;
-  gap:10px;
-  margin-top:14px;
-}
-
-.confirm-btn{
-  flex:1;
-  background:linear-gradient(135deg,#ef4444,#f97316);
-  border:none;
-  color:#fff;
-  padding:12px;
-  border-radius:14px;
-  font-weight:800;
-}
-
-.cancel-btn{
-  flex:1;
-  background:#fff;
-  border:2px solid #64748b;
-  padding:12px;
-  border-radius:14px;
-  font-weight:800;
-}
-/* ================= SPIN WHEEL STYLE ================= */
-.spin-card{
-  background:rgba(255,255,255,0.07);
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:18px;
-  padding:16px;
-  text-align:center;
-  margin-top:20px;
-}
-
-.wheel-container{
-  width:220px;
-  height:220px;
-  border-radius:50%;
-  margin:12px auto;
-  border:6px solid #38bdf8;
-  overflow:hidden;
-  position:relative;
-}
-
 #wheel{
-  width:100%;
-  height:100%;
+  width:250px;
+  height:250px;
   border-radius:50%;
+  border:10px solid #22c55e;
+  position:relative;
+  margin:auto;
+  transition: transform 4s ease-out;
   background:conic-gradient(
-    #22c55e 0deg 60deg,
-    #facc15 60deg 120deg,
-    #fb7185 120deg 180deg,
-    #38bdf8 180deg 240deg,
-    #a855f7 240deg 300deg,
-    #f97316 300deg 360deg
+    #ff0 0deg 60deg,
+    #f00 60deg 120deg,
+    #0f0 120deg 180deg,
+    #00f 180deg 240deg,
+    #ff0 240deg 300deg,
+    #f0f 300deg 360deg
   );
-  transition:transform 4s ease-out;
 }
-
-#spinBtn{
-  background:#22c55e;
-  border:none;
-  padding:12px 22px;
-  border-radius:14px;
-  font-weight:800;
+.slice{
+  position:absolute;
+  width:50%;
+  height:50%;
+  text-align:center;
+  transform-origin:100% 100%;
   font-size:16px;
-  margin-top:12px;
+  font-weight:bold;
+}
+button{
+  padding:12px 20px;
+  font-size:16px;
+  border:none;
+  border-radius:8px;
+  background:#22c55e;
+  color:black;
   cursor:pointer;
+}
+#withdrawBtn{
+  background:red;
+  color:white;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
-<h2 class="dash-title">⚡ PowerMax Dashboard ⚡</h2>
-
-<!-- USER INFO -->
-<div class="user-card">
-  <p><b>User ID:</b> <span id="uID">...</span></p>
-  <p><b>Balance:</b> <span id="uBalance">...</span></p>
-  <p><b>Name:</b> <span id="uName">...</span></p>
+<div class="card">
+<h3>User: <span id="username">User</span></h3>
+<h2>Balance: <span id="balance">0</span> Points</h2>
 </div>
 
-<!-- PLANTS -->
-<div class="plant green">
-  <div>
-    <h3>50 PTS Plant</h3>
-    <p>Commission 90%</p>
-  </div>
-  <button class="activate" data-amount="50">Activate</button>
+<div class="card">
+<h3>Daily Spins Left: <span id="spins">5</span></h3>
+
+<div id="wheel"></div>
+<br>
+<button id="spinBtn">🎡 SPIN</button>
 </div>
 
-<div class="plant yellow">
-  <div>
-    <h3>100 PTS Plant</h3>
-    <p>Commission 90%</p>
-  </div>
-  <button class="activate" data-amount="100">Activate</button>
+<div class="card">
+<h3>Withdraw Minimum: 15,000 Points</h3>
+<button id="withdrawBtn">💰 Withdraw</button>
 </div>
-
-<div class="plant purple">
-  <div>
-    <h3>300 PTS Plant</h3>
-    <p>Commission 90%</p>
-  </div>
-  <button class="activate" data-amount="300">Activate</button>
-</div>
-
-<div class="plant blue">
-  <div>
-    <h3>500 PTS Plant</h3>
-    <p>Commission 90%</p>
-  </div>
-  <button class="activate" data-amount="500">Activate</button>
-</div>
-
-<div class="plant lavender">
-  <div>
-    <h3>1000 PTS Plant</h3>
-    <p>Commission 90%</p>
-  </div>
-  <button class="activate" data-amount="1000">Activate</button>
-</div>
-
-<div class="plant pink">
-  <div>
-    <h3>2000 PTS Plant</h3>
-    <p>Commission 90%</p>
-  </div>
-  <button class="activate" data-amount="2000">Activate</button>
-</div>
-
-<div class="plant mint">
-  <div>
-    <h3>3000 PTS Plant</h3>
-    <p>Commission 90%</p>
-  </div>
-  <button class="activate" data-amount="3000">Activate</button>
-</div>
-
-<div class="plant gray">
-  <div>
-    <h3>5000 PTS Plant</h3>
-    <p>Commission 90%</p>
-  </div>
-  <button class="activate" data-amount="5000">Activate</button>
-</div>
-<!-- 🎡 SPIN WHEEL BOX -->
-<div class="spin-card">
-  <h3>🎁 Daily Spin Wheel</h3>
-  <p>Free Spins Today: <span id="spinsLeft">5</span></p>
-
-  <div class="wheel-container">
-    <div id="wheel"></div>
-  </div>
-
-  <button id="spinBtn">🎡 SPIN NOW</button>
-</div>
-
-<!-- ACTION BUTTONS -->
-<div class="btn-row">
-  <button class="btn purple-btn" id="openReferral">Refer & Earn</button>
-  <button class="btn teal-btn" id="openDeposit">Deposit</button>
-</div>
-
-<div class="btn-row">
-  <button class="btn orange-btn" id="openWithdraw">Withdraw</button>
-  <button class="btn teal-btn" id="openHistory">💸💸</button>
-</div>
-
-<button class="btn green-btn full" id="whatsappSupport">WhatsApp Support</button>
 
 <script>
-// WhatsApp Support Button
-document.getElementById("whatsappSupport").onclick = function() {
-    const phone = "923090447488"; // 0 ہٹا کر country code لگا دیا (Pakistan = 92)
-    const message = encodeURIComponent("Hello! PowerMax Support Team, how can you help me?");
-    const url = `https://wa.me/${phone}?text=${message}`;
-    window.open(url, "_blank");
-};
-</script>
-<button class="btn red-btn full">Logout</button>
-
-</div>
-<!-- ===== HISTORY POPUP ===== -->
-<div id="historyModal" class="dep-modal">
-  <div class="dep-box" style="max-height:400px; overflow-y:auto;">
-    <h3 class="dep-title">📜 Withdraw History</h3>
-    <button id="closeHistory" class="close-ref">Close</button>
-    <div id="historyContent" style="margin-top:10px;"></div> <!-- Scrollable content -->
-  </div>
-</div>
-<!-- ===== REFERRAL POPUP ===== -->
-<div id="referralModal" class="ref-modal">
-  <div class="ref-box">
-
-    <h3 class="ref-title">👥 Referral Team & Commission</h3>
-    <p class="ref-sub">Share this link to grow your team.</p>
-
-    <label class="ref-label">Your Referral Link</label>
-    <div class="ref-link">
-      <input type="text" id="refInput" readonly>
-      <button class="copy-btn" id="copyReferral">Copy</button>
-    </div>
-
-    <button id="closeReferral" class="close-ref">Close</button>
-
-  </div>
-</div>
-<!-- ===== DEPOSIT POPUP ===== -->
-<div id="depositModal" class="dep-modal">
-  <div class="dep-box">
-    <button class="status-btn">Status</button>
-    <h3 class="dep-title">💰 Deposit Chips</h3>
-
-    <div class="dep-field">
-      <label>Amount (PTS)</label>
-      <select>
-        <option>50 PTS</option>
-        <option>100 PTS</option>
-        <option>300 PTS</option>
-        <option>500 PTS</option>
-        <option>1000 PTS</option>
-        <option>2000 PTS</option>
-        <option>3000 PTS</option>
-        <option>5000 PTS</option>
-      </select>
-    </div>
-
-    <div class="dep-field">
-      <label>Wallet (Send To)</label>
-      <select id="walletSelect">
-        <option value="jazz">JazzCash</option>
-        <option value="easy">Easypaisa</option>
-      </select>
-    </div>
-
-    <div class="dep-field">
-      <label>Wallet Number (Send To)</label>
-      <div class="wallet-row">
-        <input id="walletNumber" type="text" value="03090447488" readonly>
-        <button class="copy-btn" onclick="copyDepositNumber()">Copy</button>
-      </div>
-    </div>
-
-    <div class="dep-field">
-  <label>Wallet Owner Name (Sent From)</label>
-  <input type="text" id="senderName" placeholder="Enter wallet owner name">
-</div>
-
-    <div class="dep-field">
-  <label>Your Wallet Number (Sent From)</label>
-  <input type="text" id="senderNumber" placeholder="Enter your wallet number">
-</div>
-
-    <div class="dep-actions">
-      <button class="confirm-btn" id="depositConfirmBtn">Confirm Request</button>
-      <button id="closeDeposit" class="cancel-btn">Cancel</button>
-    </div>
-
-  </div>
-</div>
-<!-- ===== WITHDRAW POPUP ===== -->
-<div id="withdrawModal" class="dep-modal">
-  <div class="dep-box">
-<button class="status-btn">Status</button>
-    <h3 class="dep-title">💸 Withdraw Funds</h3>
-
-    <p style="color:red;font-size:13px;font-weight:700;margin-bottom:10px;">
-      Minimum withdrawal: 10 pts
-    </p>
-
-    <div class="dep-field">
-      <label>Amount (Min 10 pts)</label>
-      <input type="number" placeholder="Enter amount">
-    </div>
-
-    <div class="dep-field">
-      <label>Withdraw Method</label>
-      <select>
-        <option>JazzCash</option>
-        <option>EasyPaisa</option>
-      </select>
-    </div>
-
-    <div class="dep-field">
-      <label>Wallet Owner Name</label>
-      <input type="text" placeholder="Enter your registered name">
-    </div>
-
-    <div class="dep-field">
-      <label>Account Number (JazzCash / EasyPaisa)</label>
-      <input type="text" placeholder="Enter 11 digit account number">
-    </div>
-
-    <div class="dep-actions">
-      <button class="confirm-btn">Request Withdraw</button>
-      <button id="closeWithdraw" class="cancel-btn">Cancel</button>
-    </div>
-
-  </div>
-</div>
-<script>
-document.getElementById("openReferral").onclick = function () {
-  document.getElementById("referralModal").style.display = "flex";
-};
-
-document.getElementById("closeReferral").onclick = function () {
-  document.getElementById("referralModal").style.display = "none";
-};
-/* ===== COPY REFERRAL LINK (FIXED) ===== */
-document.getElementById("copyReferral").onclick = function () {
-  const btn = this;
-  const input = document.querySelector(".ref-link input");
-
-  navigator.clipboard.writeText(input.value).then(() => {
-    btn.innerText = "Copied ✓";
-
-    setTimeout(() => {
-      btn.innerText = "Copy";
-    }, 1000);
-  });
-};
-</script>
-
-<script>
-/* OPEN DEPOSIT */
-document.getElementById("openDeposit").onclick = function () {
-  document.getElementById("depositModal").style.display = "flex";
-};
-
-/* CLOSE DEPOSIT */
-document.getElementById("closeDeposit").onclick = function () {
-  document.getElementById("depositModal").style.display = "none";
-};
-
-/* AUTO CHANGE NUMBER */
-document.getElementById("walletSelect").onchange = function () {
-  const num = document.getElementById("walletNumber");
-  if(this.value === "jazz"){
-    num.value = "03090447488";
-  }else{
-    num.value = "03008775258";
-  }
-};
-
-/* COPY NUMBER (REPEATABLE) */
-function copyDepositNumber(){
-  const input = document.getElementById("walletNumber");
-  input.select();
-  input.setSelectionRange(0,99999);
-  navigator.clipboard.writeText(input.value);
-}
-
-/* OPEN WITHDRAW */
-document.querySelector(".orange-btn").onclick = function () {
-  document.getElementById("withdrawModal").style.display = "flex";
-};
-
-/* CLOSE WITHDRAW */
-document.getElementById("closeWithdraw").onclick = function () {
-  document.getElementById("withdrawModal").style.display = "none";
-};
-</script>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import {
-    getFirestore,
-    doc,
-    getDoc,
-    updateDoc,
-    Timestamp,
-    addDoc,
-    collection
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
-    authDomain: "powermax-3ea77.firebaseapp.com",
-    projectId: "powermax-3ea77",
-    storageBucket: "powermax-3ea77.firebasestorage.app",
-    messagingSenderId: "382941878878",
-    appId: "1:382941878878:web:4472ab183d1534077732cf"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  const PLANT_DURATION_DAYS = 15;
-
-  function resetAllButtons() {
-    document.querySelectorAll(".activate").forEach(btn => {
-      btn.innerText = "Activate";
-      btn.disabled = false;
-      btn.style.background = "rgba(255,255,255,0.25)";
-    });
-  }
-
-  function markButtonActive(btn) {
-    btn.innerText = "Activated";
-    btn.disabled = true;
-    btn.style.background = "#ffffff";
-btn.style.color = "#020617"; // تاکہ text واضح نظر آئے
-  }
-
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "index.html";
-      return;
-    }
-
-    const userRef = doc(db, "users", user.uid);
-    const snap = await getDoc(userRef);
-    if (!snap.exists()) return;
-
-    const data = snap.data();
-
-    // 👤 USER INFO
-    document.getElementById("uName").innerText = data.name;
-    document.getElementById("uBalance").innerText = data.balance + " PTS";
-    document.getElementById("uID").innerText = data.uid;
-
-    // 🔗 User ka apna referral link
-    const myRefLink = `https://powermaxearning.github.io/powermax/?ref=${data.uid}`;
-    document.getElementById("refInput").value = myRefLink;
-
-    // ⏱️ EXPIRE CHECK
-    if (data.activePlant?.expiresAt) {
-      const now = Date.now();
-      const exp = data.activePlant.expiresAt.toMillis();
-      if (now > exp) {
-        await updateDoc(userRef, { activePlant: null });
-        resetAllButtons();
-        data.activePlant = null;
-      }
-    }
-
-    // ✅ ACTIVE PLANT BUTTON
-    if (data.activePlant?.amount) {
-      const btn = document.querySelector(`.activate[data-amount="${data.activePlant.amount}"]`);
-      if (btn) markButtonActive(btn);
-    }
-
-// 🔘 ACTIVATE CLICK (Single Click Safe)
-document.querySelectorAll(".activate").forEach(btn => {
-  btn.onclick = async () => {
-
-    if (btn.disabled) return;
-
-    if (data.activePlant) {
-      alert("Your plant is already active.");
-      return;
-    }
-
-    const amount = Number(btn.dataset.amount);
-    if (Number(data.balance) < amount) {
-      alert("Insufficient balance.");
-      return;
-    }
-
-    btn.disabled = true;
-    btn.innerText = "Processing...";
-
-    try {
-      const now = Timestamp.now();
-      const expires = Timestamp.fromMillis(
-        now.toMillis() + PLANT_DURATION_DAYS * 24 * 60 * 60 * 1000
-      );
-
-      // ✅ Update user
-      await updateDoc(userRef, {
-        balance: Number(data.balance) - amount,
-        activePlant: {
-          amount,
-          activatedAt: now,
-          expiresAt: expires
-        }
-      });
-
-      // ===== REFERRAL SYSTEM =====
-      try {
-        if (data.referredBy) {
-          const referrerRef = doc(db, "users", data.referredBy);
-          const refSnap = await getDoc(referrerRef);
-
-          if (refSnap.exists()) {
-            const refData = refSnap.data();
-            const now2 = Timestamp.now();
-
-            if (
-              refData.activePlant &&
-              refData.activePlant.expiresAt.toMillis() > now2.toMillis()
-            ) {
-              const commission = Math.floor(amount * 0.90);
-
-              await updateDoc(referrerRef, {
-                refCount: (refData.refCount || 0) + 1,
-                referrals: [...(refData.referrals || []), data.uid],
-                balance: (refData.balance || 0) + commission
-              });
-
-              await addDoc(collection(db, "commissions"), {
-                fromUser: data.uid,
-                toUser: data.referredBy,
-                amount: commission,
-                plantAmount: amount,
-                createdAt: now2,
-                status: "pending"
-              });
-            }
-          }
-        }
-      } catch (refErr) {
-        console.error("Referral Error:", refErr);
-      }
-
-      // ✅ Local UI update
-      data.balance -= amount;
-      data.activePlant = { amount, expiresAt: expires };
-      document.getElementById("uBalance").innerText = data.balance + " PTS";
-      markButtonActive(btn);
-
-      alert("Plant Activated Successfully!");
-
-    } catch (err) {
-      alert("Activation Error: " + err.message);
-      btn.disabled = false;
-      btn.innerText = "Activate";
-    }
-  };
-});
-}); // ✅ onAuthStateChanged CLOSED HERE
-  // ===== DEPOSIT REAL SYSTEM =====
-
-const depositBtn = document.getElementById("depositConfirmBtn");
-
-depositBtn.addEventListener("click", async () => {
-  if (depositBtn.disabled) return;  // Prevent multiple clicks
-  depositBtn.disabled = true;       
-  depositBtn.innerText = "Processing..."; // Optional: show user
-
-  const amount = document.querySelector("#depositModal select").value;
-  const walletType = document.getElementById("walletSelect").value;
-  const adminWallet = document.getElementById("walletNumber").value;
-  const senderName = document.getElementById("senderName").value.trim();
-  const senderNumber = document.getElementById("senderNumber").value.trim();
-
-  if (!senderName || !senderNumber) {
-    alert("Please fill all fields");
-    depositBtn.disabled = false;
-    depositBtn.innerText = "Confirm Request";
-    return;
-  }
-
-  const user = auth.currentUser;
-  if (!user) {
-    alert("Login again");
-    depositBtn.disabled = false;
-    depositBtn.innerText = "Confirm Request";
-    return;
-  }
-
-  try {
-    // 24-hour deposit check
-    const lastDepositQuery = await getDoc(doc(db, "users", user.uid));
-    const lastDepositData = lastDepositQuery.data();
-    if (lastDepositData.lastDepositAt) {
-      const lastTime = lastDepositData.lastDepositAt.toMillis();
-      const now = Date.now();
-      if (now - lastTime < 24 * 60 * 60 * 1000) {
-        alert("❌ You can only deposit once every 24 hours.");
-        depositBtn.disabled = false;
-        depositBtn.innerText = "Confirm Request";
-        return;
-      }
-    }
-
-    // Deposit collection
-    await addDoc(collection(db, "deposits"), {
-      uid: user.uid,
-      name: document.getElementById("uName").innerText,
-      amount: amount,
-      walletType: walletType,
-      adminWallet: adminWallet,
-      senderName: senderName,
-      senderNumber: senderNumber,
-      status: "pending",
-      createdAt: Timestamp.now()
-    });
-
-    // Update lastDepositAt
-    await updateDoc(doc(db, "users", user.uid), {
-      lastDepositAt: Timestamp.now()
-    });
-
-    alert("✅ Deposit Request Sent!");
-
-    // Clear inputs
-    document.getElementById("senderName").value = "";
-    document.getElementById("senderNumber").value = "";
-
-    // Close modal
-    document.getElementById("depositModal").style.display = "none";
-
-  } catch (err) {
-    alert("❌ Deposit Error: " + err.message);
-  } finally {
-    depositBtn.disabled = false;
-    depositBtn.innerText = "Confirm Request";
-  }
-});
-</script>
-
-<script type="module">
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  addDoc,
-  collection,
-  Timestamp
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const auth = getAuth();
-const db = getFirestore();
-
-// Withdraw Confirm Button
-const withdrawBtn = document.querySelector("#withdrawModal .confirm-btn");
-
-withdrawBtn.addEventListener("click", async () => {
-  if (withdrawBtn.disabled) return;  
-  withdrawBtn.disabled = true;       
-  withdrawBtn.innerText = "Processing...";
-
-  const amount = document.querySelector('#withdrawModal input[type="number"]').value;
-  const method = document.querySelector('#withdrawModal select').value;
-  const ownerName = document.querySelectorAll('#withdrawModal input[type="text"]')[0].value.trim();
-  const accountNumber = document.querySelectorAll('#withdrawModal input[type="text"]')[1].value.trim();
-
-  if (!amount || amount < 10 || !ownerName || !accountNumber) {
-    alert("❌ Please fill all fields (Min 10 PTS)");
-    withdrawBtn.disabled = false;
-    withdrawBtn.innerText = "Request Withdraw";
-    return;
-  }
-
-  const user = auth.currentUser;
-  if (!user) {
-    alert("Login required");
-    withdrawBtn.disabled = false;
-    withdrawBtn.innerText = "Request Withdraw";
-    return;
-  }
-
-  try {
-    // 24-hour withdraw check
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.data();
-
-    if (userData?.lastWithdrawAt) {
-      const lastTime = userData.lastWithdrawAt.toMillis();
-      const now = Date.now();
-      if (now - lastTime < 24 * 60 * 60 * 1000) {
-        alert("❌ You can only withdraw once every 24 hours.");
-        withdrawBtn.disabled = false;
-        withdrawBtn.innerText = "Request Withdraw";
-        return;
-      }
-    }
-
-    // Add withdraw request
-    await addDoc(collection(db, "withdraws"), {
-      uid: user.uid,
-      name: document.getElementById("uName").innerText,
-      amount: Number(amount),
-      method,
-      ownerName,
-      accountNumber,
-      status: "pending",
-      createdAt: Timestamp.now()
-    });
-
-    // Update lastWithdrawAt
-    await updateDoc(userRef, { lastWithdrawAt: Timestamp.now() });
-
-    alert("✅ Withdraw Request Sent!");
-
-    // Clear input fields
-    document.querySelector('#withdrawModal input[type="number"]').value = "";
-    document.querySelectorAll('#withdrawModal input[type="text"]')[0].value = "";
-    document.querySelectorAll('#withdrawModal input[type="text"]')[1].value = "";
-
-    // Close modal
-    document.getElementById("withdrawModal").style.display = "none";
-
-  } catch (err) {
-    alert("❌ Withdraw Error: " + err.message);
-  } finally {
-    withdrawBtn.disabled = false;
-    withdrawBtn.innerText = "Request Withdraw";
-  }
-});
-</script>
-
-<!-- 🔴 LOGOUT SYSTEM -->
-<script type="module">
-import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-const auth2 = getAuth();
-
-// LOGOUT BUTTON
-document.querySelector(".red-btn").addEventListener("click", async () => {
-  try {
-    await signOut(auth2);
-    alert("Logout Successful!");
-    window.location.href = "index.html";
-  } catch (e) {
-    alert("Logout Error: " + e.message);
-  }
-});
-</script>
-<script type="module">
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const auth = getAuth();
-const db = getFirestore();
-
 let spins = 5;
-let spinning = false;
+let balance = parseInt(localStorage.getItem("balance")) || 0;
+document.getElementById("balance").innerText = balance;
 
-const spinBtn = document.getElementById("spinBtn");
-const wheel = document.getElementById("wheel");
-const spinsLeft = document.getElementById("spinsLeft");
+// Points on wheel
+let points = [50,100,150,200,250,300];
 
-// Rewards
-const rewards = [5,10,20,30,50,100];
+document.getElementById("spinBtn").onclick = function(){
 
-// Load Spins From Firebase
-async function loadSpins(){
-  const user = auth.currentUser;
-  if(!user) return;
-
-  const ref = doc(db,"users",user.uid);
-  const snap = await getDoc(ref);
-  const data = snap.data();
-
-  const today = new Date().toDateString();
-
-  if(data.lastSpinDate !== today){
-    await updateDoc(ref,{ spinsLeft:5, lastSpinDate:today });
-    spins = 5;
-  } else {
-    spins = data.spinsLeft || 0;
-  }
-
-  spinsLeft.innerText = spins;
-}
-
-// Spin Button
-spinBtn.onclick = async () => {
-  if(spinning) return;
   if(spins <= 0){
-    alert("❌ No spins left today");
+    alert("No spins left today");
     return;
   }
 
-  spinning = true;
   spins--;
+  document.getElementById("spins").innerText = spins;
 
-  const deg = 3600 + Math.random()*360;
-  wheel.style.transform = `rotate(${deg}deg)`;
+  // Random wheel rotation
+  let randomDegree = 3600 + Math.floor(Math.random()*360);
+  document.getElementById("wheel").style.transform = "rotate("+randomDegree+"deg)";
 
-  setTimeout(async () => {
-    const reward = rewards[Math.floor(Math.random()*rewards.length)];
+  // Random reward
+  let reward = points[Math.floor(Math.random()*points.length)];
 
-    alert("🎉 Congratulations! You won " + reward + " PTS");
+  // SHOW AD AFTER WHEEL STOPS
+  setTimeout(function(){
 
-    const user = auth.currentUser;
-    const ref = doc(db,"users",user.uid);
-    const snap = await getDoc(ref);
-    const data = snap.data();
+    // 👉 Adsterra Ad Code Here
+    // var s=document.createElement("script");
+    // s.src="//YOUR_AD_CODE.js";
+    // document.body.appendChild(s);
 
-    await updateDoc(ref,{
-      balance: (data.balance || 0) + reward,
-      spinsLeft: spins
-    });
+    // After Ad Finished (simulate 3 seconds)
+    setTimeout(function(){
+      balance += reward;
+      localStorage.setItem("balance", balance);
+      document.getElementById("balance").innerText = balance;
 
-    document.getElementById("uBalance").innerText = (data.balance + reward) + " PTS";
-    spinsLeft.innerText = spins;
+      alert("🎉 Congratulations! You got "+reward+" points!");
 
-    spinning = false;
-  },4000);
+    },3000);
+
+  },4000); // wheel spin time
 };
 
-// Load spins after login
-setTimeout(loadSpins,2000);
+
+// Withdraw
+document.getElementById("withdrawBtn").onclick = function(){
+  if(balance < 15000){
+    alert("Minimum 15,000 points required!");
+    return;
+  }
+  alert("Withdraw request submitted!");
+};
 </script>
 
 </body>
-     </html>
+</html>
