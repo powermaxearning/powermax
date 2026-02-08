@@ -1,35 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PowerMax Casino Spin</title>
+<title>PowerMax Spin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{background:#020617;color:white;font-family:sans-serif;text-align:center}
-.top{font-size:20px;margin:8px}
-#wheelBox{position:relative;width:300px;margin:auto}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#020617;color:#f8fafc;text-align:center;padding:10px}
+.top{font-size:20px;margin:6px}
+#wheelBox{position:relative;width:320px;margin:20px auto}
 #wheel{
-width:300px;height:300px;border-radius:50%;
+width:320px;height:320px;border-radius:50%;
 background:conic-gradient(#ff0000,#ffea00,#00ff00,#00ffff,#0000ff,#ff00ff,#ff8800,#00ff00);
-border:10px solid #fff;transition:5s cubic-bezier(.17,.67,.83,.67)
+border:10px solid white;
+transition:5s cubic-bezier(.17,.67,.83,.67);
 }
 #pointer{
-position:absolute;top:-20px;left:50%;transform:translateX(-50%);
-width:0;height:0;border-left:15px solid transparent;border-right:15px solid transparent;border-bottom:30px solid white;
+position:absolute;top:-25px;left:50%;transform:translateX(-50%);
+width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-bottom:35px solid white;
 }
 button{
-padding:12px 20px;margin:6px;border:none;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer
+padding:12px 18px;margin:6px;border:none;border-radius:12px;font-weight:bold;font-size:16px;cursor:pointer
 }
-#spinBtn{background:#22c55e}
-#adSpin{background:#facc15}
-#rewardBtn{background:#38bdf8}
-.card{border:1px solid #334155;margin:10px;padding:10px;border-radius:10px}
-small{color:#94a3b8}
+#spinBtn{background:#22c55e;color:black}
+#adSpin{background:#facc15;color:black}
+#rewardBtn{background:#38bdf8;color:black}
+.card{border:1px solid #334155;margin:10px;padding:12px;border-radius:12px;background:#020617}
+small{color:#94a3b8;font-size:12px}
 </style>
 </head>
 
 <body>
+
+<h2>⚡ PowerMax Spin Game ⚡</h2>
 
 <div class="top">💰 Balance: <span id="balance">0</span> Points</div>
 <div class="top">🎯 Spins Left Today: <span id="spins">5</span></div>
@@ -45,8 +49,8 @@ small{color:#94a3b8}
 
 <div class="card">
 🔗 Referral Link:<br>
-<span id="refLink"></span><br>
-<button onclick="copyRef()">Copy</button>
+<span id="refLink"></span><br><br>
+<button onclick="copyRef()">Copy Referral Link</button>
 </div>
 
 <div class="card">
@@ -59,7 +63,7 @@ small{color:#94a3b8}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
@@ -70,70 +74,100 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// USER UID
 const uid = localStorage.getItem("uid");
+if(!uid){ location.href="index.html"; }
+
 const userRef = doc(db,"users",uid);
 
-let balance=0, spins=5;
-const MAX_POINTS=500;
-let todayPoints=0;
+let balance = 0;
+let spins = 5;
+let todayPoints = 0;
+const MAX_POINTS = 500;
 
-// LOAD USER
+// ===== GitHub Pages Correct Base URL =====
+const baseUrl = "https://powermaxearning.github.io/powermax/";
+
+// LOAD USER DATA
 async function loadUser(){
- const snap = await getDoc(userRef);
- const data = snap.data();
- balance=data.balance||0;
- spins=data.spins||5;
+  const snap = await getDoc(userRef);
+  const data = snap.data();
 
- document.getElementById("balance").innerText=balance;
- document.getElementById("spins").innerText=spins;
- document.getElementById("refCount").innerText=data.refCount||0;
- document.getElementById("refLink").innerText=location.origin+"/index.html?ref="+uid;
+  balance = data.balance || 0;
+  spins = data.spins || 5;
+
+  // DAILY RESET
+  let last = data.lastReset || 0;
+  let today = new Date().toDateString();
+  let lastDay = new Date(last).toDateString();
+
+  if(today !== lastDay){
+    spins = 5;
+    await updateDoc(userRef,{spins:5,lastReset:Date.now()});
+  }
+
+  document.getElementById("balance").innerText = balance;
+  document.getElementById("spins").innerText = spins;
+  document.getElementById("refCount").innerText = data.refCount || 0;
+
+  let refLink = baseUrl + "?ref=" + uid;
+  document.getElementById("refLink").innerText = refLink;
 }
 loadUser();
 
 // COPY REF
-window.copyRef=()=>{
- navigator.clipboard.writeText(document.getElementById("refLink").innerText);
- alert("Referral Link Copied!");
+window.copyRef = ()=>{
+  navigator.clipboard.writeText(document.getElementById("refLink").innerText);
+  alert("Referral link copied!");
 };
 
-// SPIN FUNCTION
+// ===== SPIN BUTTON =====
 document.getElementById("spinBtn").onclick = async ()=>{
- if(spins<=0){alert("No spins left today");return;}
+  if(spins <= 0){
+    alert("No spins left today");
+    return;
+  }
 
- let rewards=[20,50,80,100];
- let reward=rewards[Math.floor(Math.random()*rewards.length)];
- if(todayPoints+reward>MAX_POINTS) reward=MAX_POINTS-todayPoints;
- todayPoints+=reward;
+  let rewards = [20,50,80,100];
+  let reward = rewards[Math.floor(Math.random()*rewards.length)];
 
- spins--;
- document.getElementById("spins").innerText=spins;
- document.getElementById("spinSound").play();
+  // Daily max limit
+  if(todayPoints + reward > MAX_POINTS){
+    reward = MAX_POINTS - todayPoints;
+  }
+  todayPoints += reward;
 
- let deg=3600+Math.random()*360;
- document.getElementById("wheel").style.transform="rotate("+deg+"deg)";
+  spins--;
+  document.getElementById("spins").innerText = spins;
+  document.getElementById("spinSound").play();
 
- setTimeout(async ()=>{
-  balance+=reward;
-  await updateDoc(userRef,{balance,spins});
-  document.getElementById("balance").innerText=balance;
-  alert("🎉 You won "+reward+" points!");
- },5000);
+  let deg = 3600 + Math.random()*360;
+  document.getElementById("wheel").style.transform = "rotate("+deg+"deg)";
+
+  setTimeout(async ()=>{
+    balance += reward;
+    await updateDoc(userRef,{balance,spins});
+    document.getElementById("balance").innerText = balance;
+    alert("🎉 You got "+reward+" points!");
+  },5000);
 };
 
-// EXTRA SPIN BY AD
-document.getElementById("adSpin").onclick=async ()=>{
- // یہاں Adsterra ad code لگانا
- spins++;
- await updateDoc(userRef,{spins});
- document.getElementById("spins").innerText=spins;
- alert("Extra Spin Added!");
+// ===== EXTRA SPIN BY AD =====
+document.getElementById("adSpin").onclick = async ()=>{
+  // یہاں Adsterra کا ad script لگاؤ
+  spins++;
+  await updateDoc(userRef,{spins});
+  document.getElementById("spins").innerText = spins;
+  alert("Extra spin added!");
 };
 
-// REWARDS
-document.getElementById("rewardBtn").onclick=()=>{
- if(balance<15000){alert("Need 15000 Points");return;}
- alert("Reward request submitted for review");
+// ===== REWARDS BUTTON =====
+document.getElementById("rewardBtn").onclick = ()=>{
+  if(balance < 15000){
+    alert("You need 15000 points");
+    return;
+  }
+  alert("Reward request submitted (manual review)");
 };
 </script>
 
