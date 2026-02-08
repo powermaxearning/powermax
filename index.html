@@ -1,61 +1,137 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>PowerMax Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body{background:#020617;color:white;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif}
-button{padding:16px 40px;border:none;border-radius:12px;font-size:20px;font-weight:bold;background:#22c55e;color:black}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* BACKGROUND */
+body{
+  min-height:100vh;
+  background: linear-gradient(180deg,#020617,#0b1224,#020617);
+  color:#f8fafc;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* CONTAINER */
+.container{
+  max-width:400px;
+  width:100%;
+  padding:20px;
+}
+
+/* GLASS CARD */
+.card{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  border-radius:20px;
+  padding:25px;
+  text-align:center;
+}
+
+/* TITLE */
+.title{
+  font-size:30px;
+  font-weight:800;
+  margin-bottom:20px;
+  color:#e5e7eb;
+}
+
+.title span{
+  color:#38bdf8;
+}
+
+/* BUTTON */
+.btn{
+  width:100%;
+  padding:15px;
+  border-radius:14px;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+  border:none;
+}
+
+.google{
+  background:#ffffff;
+  color:#020617;
+}
 </style>
 </head>
+
 <body>
 
-<button id="googleLogin">🚀 Sign in with Google</button>
+<div class="container">
+  <div class="card">
+    <div class="title">⚡ <span>PowerMax</span> ⚡</div>
 
+    <!-- Google Login Button -->
+    <button class="btn google">🔐 Sign in with Google</button>
+  </div>
+</div>
+
+
+<!-- Firebase Google Login -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
-  authDomain: "powermax-3ea77.firebaseapp.com",
-  projectId: "powermax-3ea77"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
+    authDomain: "powermax-3ea77.firebaseapp.com",
+    projectId: "powermax-3ea77",
+    storageBucket: "powermax-3ea77.firebasestorage.app",
+    messagingSenderId: "382941878878",
+    appId: "1:382941878878:web:4472ab183d1534077732cf"
+  };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// REF TRACK
-const params = new URLSearchParams(window.location.search);
-const ref = params.get("ref");
-if(ref) localStorage.setItem("referrer",ref);
-
-document.getElementById("googleLogin").onclick = async ()=>{
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
   const provider = new GoogleAuthProvider();
-  const res = await signInWithPopup(auth, provider);
-  const user = res.user;
+  const db = getFirestore(app);
 
-  await setDoc(doc(db,"users",user.uid),{
-    name:user.displayName,
-    email:user.email,
-    balance:0,
-    spins:5,
-    lastReset:Date.now(),
-    refCount:0
-  },{merge:true});
+  // REF LINK
+  const urlParams = new URLSearchParams(window.location.search);
+  const referredBy = urlParams.get("ref");
 
-  // ADD REF COUNT
-  let referrer = localStorage.getItem("referrer");
-  if(referrer){
-    await updateDoc(doc(db,"users",referrer),{refCount:increment(1)});
-  }
+  document.querySelector(".google").onclick = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
 
-  localStorage.setItem("uid", user.uid);
-  location.href="dashboard.html";
-};
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          uid: user.uid,
+          name: user.displayName,
+          email: user.email,
+          balance: 0,
+          referredBy: referredBy || null,
+          createdAt: serverTimestamp()
+        });
+      }
+
+      window.location.href = "dashboard.html";
+
+    } catch (error) {
+      alert("Login Error: " + error.message);
+    }
+  };
 </script>
+
 </body>
 </html>
