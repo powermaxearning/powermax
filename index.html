@@ -1,227 +1,61 @@
- <!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
 <meta charset="UTF-8">
-<title>PowerMax</title>
+<title>PowerMax Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-/* ===== BACKGROUND (PROFESSIONAL) ===== */
-body{
-  min-height:100vh;
-  background: linear-gradient(180deg,#020617,#0b1224,#020617);
-  color:#f8fafc;
-}
-
-/* ===== CONTAINER ===== */
-.container{
-  max-width:420px;
-  margin:auto;
-  padding:24px 16px 40px;
-}
-
-/* ===== TITLE ===== */
-.title{
-  text-align:center;
-  font-size:30px;
-  font-weight:800;
-  margin-bottom:10px;
-  color:#e5e7eb;
-}
-
-.title span{
-  color:#38bdf8;
-}
-
-.desc{
-  text-align:center;
-  font-size:15px;
-  line-height:1.6;
-  color:#cbd5f5;
-  margin-bottom:22px;
-}
-
-/* ===== GLASS CARD ===== */
-.card{
-  background:rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(10px);
-  border-radius:18px;
-  padding:18px;
-  margin-bottom:20px;
-}
-
-/* ===== RULES ===== */
-.card h3{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:18px;
-  margin-bottom:12px;
-  color:#7dd3fc;
-}
-
-.card ul{
-  list-style:none;
-}
-
-.card li{
-  font-size:14px;
-  margin-bottom:8px;
-  color:#e5e7eb;
-}
-
-/* ===== BUTTONS ===== */
-.btn{
-  width:100%;
-  padding:15px;
-  border-radius:14px;
-  font-size:16px;
-  font-weight:600;
-  margin-bottom:14px;
-  cursor:pointer;
-}
-
-/* Google */
-.google{
-  background:#ffffff;
-  color:#020617;
-  border:none;
-}
-
-/* WhatsApp */
-.whatsapp{
-  background:#22c55e;
-  color:#020617;
-  border:none;
-}
-
-/* ===== REFERRAL ===== */
-.ref-title{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:18px;
-  margin-bottom:8px;
-  color:#93c5fd;
-}
-
-.ref p{
-  font-size:14px;
-  margin-bottom:6px;
-  color:#e5e7eb;
-}
-
-/* ===== FOOTER ===== */
-footer{
-  text-align:center;
-  margin-top:20px;
-  font-size:14px;
-  color:#9ca3af;
-}
+body{background:#020617;color:white;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif}
+button{padding:16px 40px;border:none;border-radius:12px;font-size:20px;font-weight:bold;background:#22c55e;color:black}
 </style>
 </head>
-
 <body>
 
-<div class="container">
+<button id="googleLogin">🚀 Sign in with Google</button>
 
-  <div class="title">
-    ⚡ <span>PowerMax</span> ⚡
-  </div>
-
-  <p class="desc">
-    PowerMax ⚡ ek smart earning platform hai<br>
-    jahan users plants activate karke referral se income earn karte hain 💰
-  </p>
-
-  <div class="card">
-    <h3>💰 Earning Rules</h3>
-    <ul>
-      <li>✔️ Plant active hona lazmi hai</li>
-      <li>✔️ Referral jab plant buy kare</li>
-      <li>✔️ Aapko commission milega</li>
-      <li>❌ Inactive plant = no earning</li>
-      <li>⏳ Plant 30 din baad expire hota hai</li>
-    </ul>
-  </div>
-
-  <button class="btn google">🔐 Sign in with Google</button>
-  <button class="btn whatsapp">📲 Join WhatsApp Channel</button>
-
-  <div class="card ref">
-    <div class="ref-title">👥 Referral System</div>
-    <p>🔹 Level 1: Active plant commission</p>
-    <p>🔹 Level 2: Fix 3% (show only)</p>
-    <p>⚠️ Plant active hona zaroori</p>
-  </div>
-
-  <footer>
-    ⚡ Official PowerMax ⚡ Platform
-  </footer>
-
-</div>
-<!-- Firebase Google Login -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
-    authDomain: "powermax-3ea77.firebaseapp.com",
-    projectId: "powermax-3ea77",
-    storageBucket: "powermax-3ea77.firebasestorage.app",
-    messagingSenderId: "382941878878",
-    appId: "1:382941878878:web:4472ab183d1534077732cf"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyAuzjRv0Q1N4az6WPAQpGffAtZGT3Z-GxA",
+  authDomain: "powermax-3ea77.firebaseapp.com",
+  projectId: "powermax-3ea77"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// REF TRACK
+const params = new URLSearchParams(window.location.search);
+const ref = params.get("ref");
+if(ref) localStorage.setItem("referrer",ref);
+
+document.getElementById("googleLogin").onclick = async ()=>{
   const provider = new GoogleAuthProvider();
-  const db = getFirestore(app);
-  // 🔗 GET REFERRAL UID FROM URL
-const urlParams = new URLSearchParams(window.location.search);
-const referredBy = urlParams.get("ref"); // null یا UID
+  const res = await signInWithPopup(auth, provider);
+  const user = res.user;
 
-  document.querySelector(".google").onclick = async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
+  await setDoc(doc(db,"users",user.uid),{
+    name:user.displayName,
+    email:user.email,
+    balance:0,
+    spins:5,
+    lastReset:Date.now(),
+    refCount:0
+  },{merge:true});
 
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
+  // ADD REF COUNT
+  let referrer = localStorage.getItem("referrer");
+  if(referrer){
+    await updateDoc(doc(db,"users",referrer),{refCount:increment(1)});
+  }
 
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-  uid: user.uid,
-  name: user.displayName,
-  email: user.email,
-  balance: 0,
-  referredBy: referredBy,
-  createdAt: serverTimestamp()
-});
-      }
-
-      window.location.href = "dashboard.html";
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-</script>
-<script>
-// WhatsApp Channel Button
-document.querySelector(".whatsapp").onclick = () => {
-  window.open("https://whatsapp.com/channel/0029Vb7we2c7dmeRYEoViE0G", "_blank");
+  localStorage.setItem("uid", user.uid);
+  location.href="dashboard.html";
 };
 </script>
-
 </body>
 </html>
